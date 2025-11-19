@@ -10,6 +10,7 @@
     "seed:admin": "ts-node scripts/createAdmin.ts",
     "seed:staff": "ts-node scripts/createStaff.ts",
     "bulk:users": "ts-node scripts/bulkCreateUsers.ts",
+    "bulk:campers": "ts-node scripts/bulkCreateCampers.ts",
     "import:campers": "ts-node scripts/importCampers.ts",
     "assign:codes": "ts-node scripts/assignCamperCodes.ts",
     "test": "jest --coverage",

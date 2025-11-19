@@ -93,10 +93,3 @@ export const ERROR_CODES = {
   UNAUTHORIZED: 'UNAUTHORIZED',
   FORBIDDEN: 'FORBIDDEN',
 } as const;
-
-export const RATE_LIMIT = {
-  WINDOW_MS: 15 * 60 * 1000, // 15 minutes
-  MAX_REQUESTS: 100,
-  AUTH_WINDOW_MS: 15 * 60 * 1000,
-  AUTH_MAX_REQUESTS: 5,
-} as const;

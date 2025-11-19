@@ -5,7 +5,6 @@ import morgan from 'morgan';
 import compression from 'compression';
 import routes from './routes';
 import errorHandler from './middleware/error.middleware';
-import { generalLimiter } from './middleware/rateLimiter.middleware';
 import logger from './utils/logger';
 
 const app: Application = express();
@@ -39,9 +38,6 @@ if (process.env.NODE_ENV === 'development') {
     },
   }));
 }
-
-// Rate limiting
-app.use(generalLimiter);
 
 // Health check endpoint
 app.get('/health', (_req: Request, res: Response) => {
