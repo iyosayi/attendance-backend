@@ -1,0 +1,839 @@
+================================================================================
+                    ATTENDANCE BACKEND API DOCUMENTATION
+================================================================================
+
+Base URL: /api/v1
+
+All endpoints (except /health, /auth/register, /auth/login) require 
+authentication via JWT token in the Authorization header:
+  Authorization: Bearer <token>
+
+================================================================================
+                              RESPONSE FORMAT
+================================================================================
+
+Success Response:
+{
+  "statusCode": 200,
+  "success": true,
+  "message": "Success message",
+  "data": { ... }
+}
+
+Error Response:
+{
+  "success": false,
+  "message": "Error message",
+  "stack": "..." // Only in development mode
+}
+
+================================================================================
+                                 ENDPOINTS
+================================================================================
+
+1. HEALTH CHECK
+--------------------------------------------------------------------------------
+GET /health
+Auth Required: No
+
+Response (200 OK):
+{
+  "status": "OK",
+  "timestamp": "2025-01-18T10:30:00.000Z",
+  "uptime": 12345.67
+}
+
+
+2. AUTHENTICATION ENDPOINTS
+--------------------------------------------------------------------------------
+
+2.1. Register User
+POST /api/v1/auth/register
+Auth Required: No
+Rate Limited: Yes (5 requests per 15 minutes)
+
+Request Body:
+{
+  "username": "johndoe",          // Required, alphanumeric, 3-30 chars
+  "email": "john@example.com",     // Required, valid email
+  "password": "password123",        // Required, min 8 chars
+  "fullName": "John Doe",          // Required, 2-100 chars
+  "role": "staff"                  // Optional: "admin" or "staff"
+}
+
+Response (201 Created):
+{
+  "statusCode": 201,
+  "success": true,
+  "message": "User registered successfully",
+  "data": {
+    "user": {
+      "_id": "507f1f77bcf86cd799439011",
+      "username": "johndoe",
+      "email": "john@example.com",
+      "fullName": "John Doe",
+      "role": "staff",
+      "createdAt": "2025-01-18T10:30:00.000Z",
+      "updatedAt": "2025-01-18T10:30:00.000Z"
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+
+Error Response (400 Bad Request):
+{
+  "success": false,
+  "message": "Username must be at least 3 characters"
+}
+
+
+2.2. Login
+POST /api/v1/auth/login
+Auth Required: No
+Rate Limited: Yes (5 requests per 15 minutes)
+
+Request Body:
+{
+  "email": "john@example.com",     // Required, valid email
+  "password": "password123"         // Required
+}
+
+Response (200 OK):
+{
+  "statusCode": 200,
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "user": {
+      "_id": "507f1f77bcf86cd799439011",
+      "username": "johndoe",
+      "email": "john@example.com",
+      "fullName": "John Doe",
+      "role": "staff"
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+
+Error Response (401 Unauthorized):
+{
+  "success": false,
+  "message": "Invalid credentials"
+}
+
+
+2.3. Get Current User
+GET /api/v1/auth/me
+Auth Required: Yes
+
+Response (200 OK):
+{
+  "statusCode": 200,
+  "success": true,
+  "message": "User retrieved successfully",
+  "data": {
+    "user": {
+      "_id": "507f1f77bcf86cd799439011",
+      "username": "johndoe",
+      "email": "john@example.com",
+      "fullName": "John Doe",
+      "role": "staff",
+      "createdAt": "2025-01-18T10:30:00.000Z",
+      "updatedAt": "2025-01-18T10:30:00.000Z"
+    }
+  }
+}
+
+Error Response (401 Unauthorized):
+{
+  "success": false,
+  "message": "Invalid token"
+}
+
+
+2.4. Update Password
+PUT /api/v1/auth/password
+Auth Required: Yes
+
+Request Body:
+{
+  "currentPassword": "oldpassword123",  // Required
+  "newPassword": "newpassword123"       // Required, min 8 chars
+}
+
+Response (200 OK):
+{
+  "statusCode": 200,
+  "success": true,
+  "message": "Password updated successfully",
+  "data": null
+}
+
+Error Response (400 Bad Request):
+{
+  "success": false,
+  "message": "Current password is incorrect"
+}
+
+
+3. CAMPER ENDPOINTS
+--------------------------------------------------------------------------------
+
+3.1. Create Camper
+POST /api/v1/campers
+Auth Required: Yes
+
+Request Body:
+{
+  "firstName": "Jane",                    // Required, 2-50 chars
+  "lastName": "Smith",                    // Required, 2-50 chars
+  "email": "jane@example.com",            // Required, valid email
+  "phone": "+1234567890",                 // Required, valid phone format
+  "age": 25,                              // Optional, 0-120
+  "gender": "Female",                     // Optional: "Male", "Female", "Other"
+  "emergencyContact": {                   // Optional
+    "name": "John Smith",
+    "phone": "+1234567890",
+    "relationship": "Parent"
+  },
+  "notes": "Allergic to peanuts"         // Optional, max 1000 chars
+}
+
+Response (201 Created):
+{
+  "statusCode": 201,
+  "success": true,
+  "message": "Camper created successfully",
+  "data": {
+    "camper": {
+      "_id": "507f1f77bcf86cd799439011",
+      "firstName": "Jane",
+      "lastName": "Smith",
+      "email": "jane@example.com",
+      "phone": "+1234567890",
+      "age": 25,
+      "gender": "Female",
+      "status": "pending",
+      "emergencyContact": {
+        "name": "John Smith",
+        "phone": "+1234567890",
+        "relationship": "Parent"
+      },
+      "notes": "Allergic to peanuts",
+      "roomId": null,
+      "createdAt": "2025-01-18T10:30:00.000Z",
+      "updatedAt": "2025-01-18T10:30:00.000Z"
+    }
+  }
+}
+
+
+3.2. Get All Campers
+GET /api/v1/campers
+Auth Required: Yes
+
+Query Parameters:
+  - page (number, default: 1)
+  - limit (number, default: 10, max: 100)
+  - status (string, optional): "pending", "checked-in", "checked-out"
+  - search (string, optional): Search in name, email, phone
+
+Example: GET /api/v1/campers?page=1&limit=10&status=checked-in&search=jane
+
+Response (200 OK):
+{
+  "statusCode": 200,
+  "success": true,
+  "message": "Campers retrieved successfully",
+  "data": {
+    "campers": [
+      {
+        "_id": "507f1f77bcf86cd799439011",
+        "firstName": "Jane",
+        "lastName": "Smith",
+        "email": "jane@example.com",
+        "phone": "+1234567890",
+        "age": 25,
+        "gender": "Female",
+        "status": "checked-in",
+        "emergencyContact": { ... },
+        "notes": "Allergic to peanuts",
+        "roomId": "507f1f77bcf86cd799439012",
+        "createdAt": "2025-01-18T10:30:00.000Z",
+        "updatedAt": "2025-01-18T10:30:00.000Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 50,
+      "pages": 5
+    }
+  }
+}
+
+
+3.3. Get Camper by ID
+GET /api/v1/campers/:id
+Auth Required: Yes
+
+Response (200 OK):
+{
+  "statusCode": 200,
+  "success": true,
+  "message": "Camper retrieved successfully",
+  "data": {
+    "camper": {
+      "_id": "507f1f77bcf86cd799439011",
+      "firstName": "Jane",
+      "lastName": "Smith",
+      "email": "jane@example.com",
+      "phone": "+1234567890",
+      "age": 25,
+      "gender": "Female",
+      "status": "checked-in",
+      "emergencyContact": { ... },
+      "notes": "Allergic to peanuts",
+      "roomId": "507f1f77bcf86cd799439012",
+      "createdAt": "2025-01-18T10:30:00.000Z",
+      "updatedAt": "2025-01-18T10:30:00.000Z"
+    }
+  }
+}
+
+Error Response (404 Not Found):
+{
+  "success": false,
+  "message": "Camper not found"
+}
+
+
+3.4. Update Camper
+PUT /api/v1/campers/:id
+Auth Required: Yes
+
+Request Body (all fields optional):
+{
+  "firstName": "Jane",
+  "lastName": "Smith",
+  "email": "jane@example.com",
+  "phone": "+1234567890",
+  "age": 25,
+  "gender": "Female",
+  "emergencyContact": {
+    "name": "John Smith",
+    "phone": "+1234567890",
+    "relationship": "Parent"
+  },
+  "notes": "Updated notes"
+}
+
+Response (200 OK):
+{
+  "statusCode": 200,
+  "success": true,
+  "message": "Camper updated successfully",
+  "data": {
+    "camper": {
+      "_id": "507f1f77bcf86cd799439011",
+      "firstName": "Jane",
+      "lastName": "Smith",
+      ...
+    }
+  }
+}
+
+
+3.5. Delete Camper
+DELETE /api/v1/campers/:id
+Auth Required: Yes
+Admin Required: Yes
+
+Response (200 OK):
+{
+  "statusCode": 200,
+  "success": true,
+  "message": "Camper deleted successfully",
+  "data": null
+}
+
+Error Response (403 Forbidden):
+{
+  "success": false,
+  "message": "Access denied. Admin role required."
+}
+
+
+4. CHECK-IN ENDPOINTS
+--------------------------------------------------------------------------------
+
+4.1. Check In Camper
+POST /api/v1/checkin/:camperId/in
+Auth Required: Yes
+
+Request Body:
+{
+  "notes": "Checked in at main entrance"  // Optional, max 500 chars
+}
+
+Response (200 OK):
+{
+  "statusCode": 200,
+  "success": true,
+  "message": "Camper checked in successfully",
+  "data": null
+}
+
+Error Response (400 Bad Request):
+{
+  "success": false,
+  "message": "Camper is already checked in"
+}
+
+
+4.2. Check Out Camper
+POST /api/v1/checkin/:camperId/out
+Auth Required: Yes
+
+Request Body:
+{
+  "notes": "Checked out at 5 PM"  // Optional, max 500 chars
+}
+
+Response (200 OK):
+{
+  "statusCode": 200,
+  "success": true,
+  "message": "Camper checked out successfully",
+  "data": null
+}
+
+Error Response (400 Bad Request):
+{
+  "success": false,
+  "message": "Camper is not checked in"
+}
+
+
+4.3. Get Check-in Logs
+GET /api/v1/checkin/:camperId/logs
+Auth Required: Yes
+
+Response (200 OK):
+{
+  "statusCode": 200,
+  "success": true,
+  "message": "Check-in logs retrieved successfully",
+  "data": {
+    "logs": [
+      {
+        "_id": "507f1f77bcf86cd799439011",
+        "camperId": "507f1f77bcf86cd799439010",
+        "action": "check-in",
+        "checkedInBy": "507f1f77bcf86cd799439009",
+        "notes": "Checked in at main entrance",
+        "timestamp": "2025-01-18T10:30:00.000Z",
+        "createdAt": "2025-01-18T10:30:00.000Z"
+      },
+      {
+        "_id": "507f1f77bcf86cd799439012",
+        "camperId": "507f1f77bcf86cd799439010",
+        "action": "check-out",
+        "checkedOutBy": "507f1f77bcf86cd799439009",
+        "notes": "Checked out at 5 PM",
+        "timestamp": "2025-01-18T17:00:00.000Z",
+        "createdAt": "2025-01-18T17:00:00.000Z"
+      }
+    ]
+  }
+}
+
+
+5. ROOM ENDPOINTS
+--------------------------------------------------------------------------------
+
+5.1. Create Room
+POST /api/v1/rooms
+Auth Required: Yes
+Admin Required: Yes
+
+Request Body:
+{
+  "roomNumber": "101",                    // Required, 1-20 chars
+  "roomName": "Main Hall",                // Optional, max 100 chars
+  "capacity": 20,                         // Required, 1-50
+  "floor": "1st",                         // Optional, max 20 chars
+  "building": "Building A",               // Optional, max 50 chars
+  "amenities": ["WiFi", "AC", "TV"],     // Optional, array of strings
+  "notes": "Corner room with windows"    // Optional, max 1000 chars
+}
+
+Response (201 Created):
+{
+  "statusCode": 201,
+  "success": true,
+  "message": "Room created successfully",
+  "data": {
+    "room": {
+      "_id": "507f1f77bcf86cd799439011",
+      "roomNumber": "101",
+      "roomName": "Main Hall",
+      "capacity": 20,
+      "currentOccupancy": 0,
+      "floor": "1st",
+      "building": "Building A",
+      "amenities": ["WiFi", "AC", "TV"],
+      "notes": "Corner room with windows",
+      "isActive": true,
+      "campers": [],
+      "createdAt": "2025-01-18T10:30:00.000Z",
+      "updatedAt": "2025-01-18T10:30:00.000Z"
+    }
+  }
+}
+
+
+5.2. Get All Rooms
+GET /api/v1/rooms
+Auth Required: Yes
+
+Query Parameters:
+  - page (number, default: 1)
+  - limit (number, default: 10, max: 100)
+  - isActive (boolean, optional)
+  - building (string, optional)
+  - floor (string, optional)
+
+Example: GET /api/v1/rooms?page=1&limit=10&isActive=true&building=Building%20A
+
+Response (200 OK):
+{
+  "statusCode": 200,
+  "success": true,
+  "message": "Rooms retrieved successfully",
+  "data": {
+    "rooms": [
+      {
+        "_id": "507f1f77bcf86cd799439011",
+        "roomNumber": "101",
+        "roomName": "Main Hall",
+        "capacity": 20,
+        "currentOccupancy": 5,
+        "floor": "1st",
+        "building": "Building A",
+        "amenities": ["WiFi", "AC", "TV"],
+        "notes": "Corner room with windows",
+        "isActive": true,
+        "campers": [
+          {
+            "camperId": "507f1f77bcf86cd799439010",
+            "role": "camper"
+          }
+        ],
+        "createdAt": "2025-01-18T10:30:00.000Z",
+        "updatedAt": "2025-01-18T10:30:00.000Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 25,
+      "pages": 3
+    }
+  }
+}
+
+
+5.3. Get Available Rooms
+GET /api/v1/rooms/available
+Auth Required: Yes
+
+Response (200 OK):
+{
+  "statusCode": 200,
+  "success": true,
+  "message": "Available rooms retrieved successfully",
+  "data": {
+    "rooms": [
+      {
+        "_id": "507f1f77bcf86cd799439011",
+        "roomNumber": "101",
+        "roomName": "Main Hall",
+        "capacity": 20,
+        "currentOccupancy": 5,
+        "availableSpots": 15,
+        "floor": "1st",
+        "building": "Building A",
+        "amenities": ["WiFi", "AC", "TV"],
+        "isActive": true
+      }
+    ]
+  }
+}
+
+
+5.4. Get Room by ID
+GET /api/v1/rooms/:id
+Auth Required: Yes
+
+Response (200 OK):
+{
+  "statusCode": 200,
+  "success": true,
+  "message": "Room retrieved successfully",
+  "data": {
+    "room": {
+      "_id": "507f1f77bcf86cd799439011",
+      "roomNumber": "101",
+      "roomName": "Main Hall",
+      "capacity": 20,
+      "currentOccupancy": 5,
+      "floor": "1st",
+      "building": "Building A",
+      "amenities": ["WiFi", "AC", "TV"],
+      "notes": "Corner room with windows",
+      "isActive": true,
+      "campers": [
+        {
+          "camperId": "507f1f77bcf86cd799439010",
+          "role": "camper"
+        }
+      ],
+      "createdAt": "2025-01-18T10:30:00.000Z",
+      "updatedAt": "2025-01-18T10:30:00.000Z"
+    }
+  }
+}
+
+
+5.5. Update Room
+PUT /api/v1/rooms/:id
+Auth Required: Yes
+Admin Required: Yes
+
+Request Body (all fields optional):
+{
+  "roomNumber": "102",
+  "roomName": "Updated Room Name",
+  "capacity": 25,
+  "floor": "2nd",
+  "building": "Building B",
+  "amenities": ["WiFi", "AC"],
+  "notes": "Updated notes",
+  "isActive": true
+}
+
+Response (200 OK):
+{
+  "statusCode": 200,
+  "success": true,
+  "message": "Room updated successfully",
+  "data": {
+    "room": {
+      "_id": "507f1f77bcf86cd799439011",
+      "roomNumber": "102",
+      ...
+    }
+  }
+}
+
+
+5.6. Assign Camper to Room
+POST /api/v1/rooms/:id/assign
+Auth Required: Yes
+
+Request Body:
+{
+  "camperId": "507f1f77bcf86cd799439010",  // Required, valid MongoDB ObjectId
+  "role": "camper"                          // Optional: "camper", "lead", "assistant" (default: "camper")
+}
+
+Response (200 OK):
+{
+  "statusCode": 200,
+  "success": true,
+  "message": "Camper assigned to room successfully",
+  "data": {
+    "room": {
+      "_id": "507f1f77bcf86cd799439011",
+      "roomNumber": "101",
+      "currentOccupancy": 6,
+      "campers": [
+        {
+          "camperId": "507f1f77bcf86cd799439010",
+          "role": "camper"
+        }
+      ],
+      ...
+    }
+  }
+}
+
+Error Response (400 Bad Request):
+{
+  "success": false,
+  "message": "Room is at full capacity"
+}
+
+
+5.7. Remove Camper from Room
+POST /api/v1/rooms/:id/remove
+Auth Required: Yes
+
+Request Body:
+{
+  "camperId": "507f1f77bcf86cd799439010"  // Required, valid MongoDB ObjectId
+}
+
+Response (200 OK):
+{
+  "statusCode": 200,
+  "success": true,
+  "message": "Camper removed from room successfully",
+  "data": {
+    "room": {
+      "_id": "507f1f77bcf86cd799439011",
+      "roomNumber": "101",
+      "currentOccupancy": 4,
+      "campers": [],
+      ...
+    }
+  }
+}
+
+
+5.8. Delete Room
+DELETE /api/v1/rooms/:id
+Auth Required: Yes
+Admin Required: Yes
+
+Response (200 OK):
+{
+  "statusCode": 200,
+  "success": true,
+  "message": "Room deleted successfully",
+  "data": null
+}
+
+
+6. STATISTICS ENDPOINTS
+--------------------------------------------------------------------------------
+
+6.1. Get Overview Statistics
+GET /api/v1/stats/overview
+Auth Required: Yes
+Note: Response is cached for 2 minutes
+
+Response (200 OK):
+{
+  "statusCode": 200,
+  "success": true,
+  "message": "Overview statistics retrieved successfully",
+  "data": {
+    "campers": {
+      "total": 150,
+      "checkedIn": 120,
+      "checkedOut": 20,
+      "pending": 10
+    },
+    "rooms": {
+      "total": 25,
+      "occupied": 20,
+      "available": 5,
+      "totalCapacity": 500,
+      "totalOccupancy": 120,
+      "occupancyRate": "24.00"
+    }
+  }
+}
+
+
+7. EXPORT ENDPOINTS
+--------------------------------------------------------------------------------
+
+7.1. Export Campers
+GET /api/v1/export/campers
+Auth Required: Yes
+Response Type: CSV file download
+
+Response (200 OK):
+  - Content-Type: text/csv
+  - Content-Disposition: attachment; filename="campers-export.csv"
+  - File download with camper data
+
+Error Response (500 Internal Server Error):
+{
+  "success": false,
+  "message": "Error downloading file"
+}
+
+
+7.2. Export Rooms
+GET /api/v1/export/rooms
+Auth Required: Yes
+Response Type: CSV file download
+
+Response (200 OK):
+  - Content-Type: text/csv
+  - Content-Disposition: attachment; filename="rooms-export.csv"
+  - File download with room data
+
+Error Response (500 Internal Server Error):
+{
+  "success": false,
+  "message": "Error downloading file"
+}
+
+
+================================================================================
+                              ERROR CODES
+================================================================================
+
+HTTP Status Codes:
+  - 200 OK: Request successful
+  - 201 Created: Resource created successfully
+  - 400 Bad Request: Invalid request data
+  - 401 Unauthorized: Authentication required or invalid token
+  - 403 Forbidden: Insufficient permissions (admin required)
+  - 404 Not Found: Resource not found
+  - 409 Conflict: Duplicate resource (e.g., duplicate email)
+  - 422 Unprocessable Entity: Validation error
+  - 500 Internal Server Error: Server error
+
+Common Error Messages:
+  - "Invalid token" - JWT token is invalid
+  - "Token expired" - JWT token has expired
+  - "Access denied. Admin role required." - Admin role needed
+  - "Resource not found" - Invalid ID format or resource doesn't exist
+  - "Duplicate value for field: <field>" - Unique constraint violation
+  - Validation errors will include specific field validation messages
+
+
+================================================================================
+                              RATE LIMITING
+================================================================================
+
+- General endpoints: 100 requests per 15 minutes
+- Auth endpoints (/auth/register, /auth/login): 5 requests per 15 minutes
+
+Rate limit exceeded response (429 Too Many Requests):
+{
+  "success": false,
+  "message": "Too many requests, please try again later"
+}
+
+
+================================================================================
+                              NOTES
+================================================================================
+
+1. All timestamps are in ISO 8601 format (UTC)
+2. All IDs are MongoDB ObjectIds (24 character hex strings)
+3. Pagination defaults: page=1, limit=10, max limit=100
+4. Export endpoints return CSV files, not JSON
+5. Statistics endpoint responses are cached for 2 minutes
+6. All authenticated endpoints require: Authorization: Bearer <token>
+7. Admin-only endpoints require user role to be "admin"
+
+================================================================================
+

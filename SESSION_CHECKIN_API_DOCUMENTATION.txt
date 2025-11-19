@@ -1,0 +1,553 @@
+================================================================================
+SESSION-BASED CHECK-IN SYSTEM - API DOCUMENTATION
+================================================================================
+
+OVERVIEW
+--------
+The check-in system has been enhanced to support session-based check-ins for a 
+church program. The system now tracks check-ins across four sessions:
+- Morning: Campers leave campground for church (on bus)
+- Afternoon: Campers return from church to campground (on bus) - around 12/1pm
+- Evening: Campers leave campground for church again (on bus) - around 2/3pm
+- Night: Verify campers are at campground premises (by phone number)
+
+All endpoints require authentication (Bearer token in Authorization header).
+
+
+================================================================================
+NEW SESSION-BASED ENDPOINTS
+================================================================================
+
+1. INDIVIDUAL SESSION CHECK-IN
+   ----------------------------
+   POST /api/checkin/session/:session/:camperId
+   
+   Description: Check in a single camper for a specific session
+   
+   Path Parameters:
+   - session: string (required) - One of: "morning", "afternoon", "evening", "night"
+   - camperId: string (required) - MongoDB ObjectId of the camper
+   
+   Request Body (JSON):
+   {
+     "busId": "Bus-1",              // Required for morning/afternoon/evening, optional for night
+     "location": "bus",              // Optional: "campground", "bus", "church"
+     "direction": "to-church",       // Optional: "to-church", "to-campground"
+     "notes": "Optional notes"       // Optional: string (max 500 chars)
+   }
+   
+   Response (200 OK):
+   {
+     "statusCode": 200,
+     "data": null,
+     "message": "Camper checked in for morning session successfully"
+   }
+   
+   Error Responses:
+   - 400: Invalid session, busId required for bus sessions, or camper already checked in
+   - 404: Camper not found
+   
+   Notes:
+   - For morning/afternoon/evening sessions, busId is required
+   - For night session, busId is optional
+   - System automatically sets location and direction based on session if not provided
+   - Prevents duplicate check-ins for the same session on the same day
+
+
+2. BULK SESSION CHECK-IN
+   -----------------------
+   POST /api/checkin/session/:session/bulk
+   
+   Description: Check in multiple campers at once (typically for bus sessions)
+   
+   Path Parameters:
+   - session: string (required) - One of: "morning", "afternoon", "evening", "night"
+   
+   Request Body (JSON):
+   {
+     "camperIds": ["camperId1", "camperId2", "camperId3"],  // Required: array of camper IDs
+     "busId": "Bus-1",                                        // Required for bus sessions
+     "location": "bus",                                      // Optional
+     "direction": "to-church",                               // Optional
+     "notes": "All checked in on bus"                         // Optional
+   }
+   
+   Response (200 OK):
+   {
+     "statusCode": 200,
+     "data": {
+       "success": 25,
+       "failed": 2,
+       "errors": [
+         "Camper John Doe already checked in for morning session",
+         "Camper with ID 507f1f77bcf86cd799439011 not found"
+       ]
+     },
+     "message": "Bulk check-in for morning session completed"
+   }
+   
+   Error Responses:
+   - 400: Invalid session, missing camperIds, or busId required for bus sessions
+   
+   Notes:
+   - Returns count of successful and failed check-ins
+   - Errors array contains details about failed check-ins
+   - Continues processing even if some campers fail
+
+
+3. NIGHT SESSION CHECK-IN BY PHONE NUMBER
+   ----------------------------------------
+   POST /api/checkin/night/by-phone
+   
+   Description: Check in a camper for night session using their phone number
+   (Used when campers call their number and team lead marks them checked in)
+   
+   Request Body (JSON):
+   {
+     "phoneNumber": "+1234567890",  // Required: phone number string
+     "notes": "Called at 9:30 PM"  // Optional: string (max 500 chars)
+   }
+   
+   Response (200 OK):
+   {
+     "statusCode": 200,
+     "data": null,
+     "message": "Camper checked in for night session successfully"
+   }
+   
+   Error Responses:
+   - 400: phoneNumber is required or invalid format
+   - 404: Camper not found with this phone number
+   
+   Notes:
+   - Phone number format should match: /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/
+
+
+4. GET CAMPER BY PHONE NUMBER
+   -----------------------------
+   GET /api/checkin/camper/by-phone?phoneNumber=+1234567890
+   
+   Description: Look up a camper by phone number (useful before night check-in)
+   
+   Query Parameters:
+   - phoneNumber: string (required) - Phone number to search for
+   
+   Response (200 OK):
+   {
+     "statusCode": 200,
+     "data": {
+       "camper": {
+         "_id": "507f1f77bcf86cd799439011",
+         "firstName": "John",
+         "lastName": "Doe",
+         "email": "john@example.com",
+         "phone": "+1234567890",
+         "roomId": {
+           "_id": "507f1f77bcf86cd799439012",
+           "roomNumber": "101",
+           "roomName": "Room 101"
+         },
+         "status": "checked-in"
+       }
+     },
+     "message": "Camper retrieved successfully"
+   }
+   
+   Error Responses:
+   - 400: phoneNumber query parameter is required
+   - 404: Camper not found with this phone number
+
+
+5. VERIFY BUS TALLY
+   -----------------
+   GET /api/checkin/bus/:busId/verify?session=morning&date=2024-01-15
+   
+   Description: Verify bus check-ins and get count of campers checked in on a bus
+   
+   Path Parameters:
+   - busId: string (required) - Bus identifier (e.g., "Bus-1", "Bus-A")
+   
+   Query Parameters:
+   - session: string (required) - One of: "morning", "afternoon", "evening"
+   - date: string (optional) - ISO date string (defaults to today)
+   
+   Response (200 OK):
+   {
+     "statusCode": 200,
+     "data": {
+       "busId": "Bus-1",
+       "session": "morning",
+       "date": "2024-01-15T00:00:00.000Z",
+       "checkedInCount": 25,
+       "checkedInCampers": [
+         {
+           "camper": {
+             "_id": "507f1f77bcf86cd799439011",
+             "firstName": "John",
+             "lastName": "Doe",
+             "email": "john@example.com",
+             "phone": "+1234567890",
+             "roomId": "507f1f77bcf86cd799439012"
+           },
+           "timestamp": "2024-01-15T08:30:00.000Z",
+           "performedBy": "507f1f77bcf86cd799439013"
+         }
+         // ... more campers
+       ]
+     },
+     "message": "Bus tally verified successfully"
+   }
+   
+   Error Responses:
+   - 400: session query parameter is required and must be morning, afternoon, or evening
+
+
+6. GET BUS CHECK-INS
+   ------------------
+   GET /api/checkin/bus/:busId/checkins?session=morning&date=2024-01-15
+   
+   Description: Get all check-in records for a specific bus and session
+   
+   Path Parameters:
+   - busId: string (required) - Bus identifier
+   
+   Query Parameters:
+   - session: string (required) - One of: "morning", "afternoon", "evening"
+   - date: string (optional) - ISO date string (defaults to today)
+   
+   Response (200 OK):
+   {
+     "statusCode": 200,
+     "data": {
+       "checkIns": [
+         {
+           "_id": "507f1f77bcf86cd799439014",
+           "camperId": {
+             "_id": "507f1f77bcf86cd799439011",
+             "firstName": "John",
+             "lastName": "Doe",
+             "email": "john@example.com",
+             "phone": "+1234567890",
+             "roomId": "507f1f77bcf86cd799439012",
+             "status": "checked-in"
+           },
+           "session": "morning",
+           "busId": "Bus-1",
+           "location": "bus",
+           "direction": "to-church",
+           "timestamp": "2024-01-15T08:30:00.000Z",
+           "performedBy": {
+             "_id": "507f1f77bcf86cd799439013",
+             "fullName": "Team Lead Name",
+             "email": "lead@example.com"
+           },
+           "roomId": {
+             "_id": "507f1f77bcf86cd799439012",
+             "roomNumber": "101",
+             "roomName": "Room 101"
+           },
+           "notes": "Checked in on bus"
+         }
+         // ... more check-ins
+       ]
+     },
+     "message": "Bus check-ins retrieved successfully"
+   }
+   
+   Error Responses:
+   - 400: session query parameter is required and must be morning, afternoon, or evening
+
+
+7. GET CAMPER SESSION STATUS
+   ----------------------------
+   GET /api/checkin/camper/:camperId/sessions?date=2024-01-15
+   
+   Description: Get a camper's session completion status for a specific date
+   
+   Path Parameters:
+   - camperId: string (required) - MongoDB ObjectId of the camper
+   
+   Query Parameters:
+   - date: string (optional) - ISO date string (defaults to today)
+   
+   Response (200 OK):
+   {
+     "statusCode": 200,
+     "data": {
+       "camperId": "507f1f77bcf86cd799439011",
+       "date": "2024-01-15T00:00:00.000Z",
+       "sessions": {
+         "morning": true,
+         "afternoon": true,
+         "evening": false,
+         "night": false
+       },
+       "completedSessions": ["morning", "afternoon"],
+       "missingSessions": ["evening", "night"]
+     },
+     "message": "Session status retrieved successfully"
+   }
+   
+   Notes:
+   - Useful for tracking which sessions a camper has completed
+   - Can be used to show progress or identify missing check-ins
+
+
+8. GET DAILY SESSION SUMMARY
+   --------------------------
+   GET /api/checkin/summary?date=2024-01-15
+   
+   Description: Get overall session attendance statistics for a day
+   
+   Query Parameters:
+   - date: string (optional) - ISO date string (defaults to today)
+   
+   Response (200 OK):
+   {
+     "statusCode": 200,
+     "data": {
+       "date": "2024-01-15T00:00:00.000Z",
+       "sessions": {
+         "morning": {
+           "total": 150,
+           "uniqueCampers": 150
+         },
+         "afternoon": {
+           "total": 148,
+           "uniqueCampers": 148
+         },
+         "evening": {
+           "total": 145,
+           "uniqueCampers": 145
+         },
+         "night": {
+           "total": 150,
+           "uniqueCampers": 150
+         }
+       },
+       "totalCheckIns": 593,
+       "uniqueCampers": 150
+     },
+     "message": "Daily session summary retrieved successfully"
+   }
+   
+   Notes:
+   - "total" = total number of check-in records for that session
+   - "uniqueCampers" = number of unique campers who checked in for that session
+   - Useful for dashboard/overview displays
+
+
+================================================================================
+STATISTICS ENDPOINT
+================================================================================
+
+9. GET SESSION ATTENDANCE STATISTICS
+   -----------------------------------
+   GET /api/stats/sessions?date=2024-01-15
+   
+   Description: Get session attendance statistics (same as daily summary)
+   
+   Query Parameters:
+   - date: string (optional) - ISO date string (defaults to today)
+   
+   Response (200 OK):
+   {
+     "statusCode": 200,
+     "data": {
+       "date": "2024-01-15T00:00:00.000Z",
+       "sessions": {
+         "morning": {
+           "total": 150,
+           "uniqueCampers": 150
+         },
+         "afternoon": {
+           "total": 148,
+           "uniqueCampers": 148
+         },
+         "evening": {
+           "total": 145,
+           "uniqueCampers": 145
+         },
+         "night": {
+           "total": 150,
+           "uniqueCampers": 150
+         }
+       },
+       "totalCheckIns": 593,
+       "uniqueCampers": 150
+     },
+     "message": "Session attendance statistics retrieved successfully"
+   }
+
+
+================================================================================
+LEGACY ENDPOINTS (Still Available)
+================================================================================
+
+The following endpoints are still available for backward compatibility:
+
+- POST /api/checkin/:camperId/in
+- POST /api/checkin/:camperId/out
+- GET /api/checkin/:camperId/logs
+
+These endpoints work as before but do not support session-based tracking.
+
+
+================================================================================
+SESSION FLOW EXPLANATION
+================================================================================
+
+Daily Flow:
+-----------
+1. MORNING (8-9am): Campers leave campground → check-in on bus → go to church
+   - busId: REQUIRED
+   - location: "bus" (default)
+   - direction: "to-church" (default)
+
+2. AFTERNOON (12-1pm): Campers return from church → check-in on bus → arrive at campground
+   - busId: REQUIRED
+   - location: "bus" (default)
+   - direction: "to-campground" (default)
+
+3. EVENING (2-3pm): Campers leave campground again → check-in on bus → go to church
+   - busId: REQUIRED
+   - location: "bus" (default)
+   - direction: "to-church" (default)
+
+4. NIGHT: Verify all campers are present at campground premises
+   - busId: NOT required
+   - location: "campground" (default)
+   - Check-in by phone number (campers call their number)
+
+
+================================================================================
+ERROR HANDLING
+================================================================================
+
+All endpoints return errors in the following format:
+
+{
+  "statusCode": 400,
+  "data": null,
+  "message": "Error message describing what went wrong"
+}
+
+Common Error Codes:
+- 400: Bad Request (validation errors, missing required fields)
+- 401: Unauthorized (missing or invalid authentication token)
+- 404: Not Found (camper, bus, etc. not found)
+- 500: Internal Server Error
+
+Error Messages:
+- "Invalid session. Must be morning, afternoon, evening, or night"
+- "busId is required for morning session"
+- "Camper already checked in for morning session today"
+- "Camper not found"
+- "phoneNumber is required"
+- "Camper not found with this phone number"
+
+
+================================================================================
+AUTHENTICATION
+================================================================================
+
+All endpoints require authentication. Include the Bearer token in the 
+Authorization header:
+
+Authorization: Bearer <your-jwt-token>
+
+The token should be obtained from the login endpoint:
+POST /api/auth/login
+
+
+================================================================================
+EXAMPLE USAGE SCENARIOS
+================================================================================
+
+Scenario 1: Morning Bus Check-In (Bulk)
+----------------------------------------
+POST /api/checkin/session/morning/bulk
+{
+  "camperIds": ["id1", "id2", "id3", ...],
+  "busId": "Bus-1",
+  "notes": "All present on bus"
+}
+
+Scenario 2: Afternoon Return Check-In (Individual)
+---------------------------------------------------
+POST /api/checkin/session/afternoon/camperId123
+{
+  "busId": "Bus-1"
+}
+
+Scenario 3: Night Session Check-In (By Phone)
+----------------------------------------------
+1. First, look up camper:
+   GET /api/checkin/camper/by-phone?phoneNumber=+1234567890
+
+2. Then check them in:
+   POST /api/checkin/night/by-phone
+   {
+     "phoneNumber": "+1234567890",
+     "notes": "Called at 9:30 PM"
+   }
+
+Scenario 4: Verify Bus Tally
+------------------------------
+GET /api/checkin/bus/Bus-1/verify?session=morning&date=2024-01-15
+
+This returns the count and list of all campers checked in on that bus for 
+that session, allowing you to verify the numbers match expectations.
+
+Scenario 5: Check Camper's Daily Progress
+------------------------------------------
+GET /api/checkin/camper/camperId123/sessions?date=2024-01-15
+
+Returns which sessions the camper has completed and which are missing.
+
+
+================================================================================
+NOTES FOR FRONTEND IMPLEMENTATION
+================================================================================
+
+1. Session Validation:
+   - Always validate session parameter is one of: "morning", "afternoon", "evening", "night"
+   - For bus sessions (morning/afternoon/evening), busId is required
+   - For night session, busId is optional
+
+2. Date Handling:
+   - All date query parameters should be ISO 8601 format strings
+   - If not provided, endpoints default to today's date
+   - Example: "2024-01-15" or "2024-01-15T00:00:00.000Z"
+
+3. Bulk Check-In:
+   - Returns success/failure counts and error details
+   - Some campers may fail (already checked in, not found, etc.)
+   - Frontend should display both successful and failed check-ins
+
+4. Phone Number Format:
+   - Accepts various formats: "+1234567890", "(123) 456-7890", "123-456-7890"
+   - Backend normalizes phone numbers for lookup
+
+5. Real-time Updates:
+   - Consider polling or WebSocket for real-time attendance updates
+   - Cache daily summaries to reduce API calls
+
+6. Error Handling:
+   - Always check statusCode in response
+   - Display user-friendly error messages
+   - Handle network errors gracefully
+
+7. Bus Verification:
+   - Use verify endpoint to compare expected vs actual campers on bus
+   - Display discrepancies clearly to team leads
+
+8. Session Status:
+   - Use session status endpoint to show progress indicators
+   - Highlight missing sessions for each camper
+
+
+================================================================================
+END OF DOCUMENTATION
+================================================================================
+
