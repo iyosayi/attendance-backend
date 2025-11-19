@@ -633,6 +633,45 @@ class CheckInService {
       uniqueCampers: allCampers.size,
     };
   }
+
+  /**
+   * Get all check-ins for a specific session
+   */
+  async getSessionCheckIns(
+    session: 'morning' | 'afternoon' | 'evening' | 'night',
+    date?: Date
+  ): Promise<{
+    fullname: string;
+    checkedInBy: string;
+    busId: string | null;
+    time: Date;
+  }[]> {
+    const targetDate = date || new Date();
+    const startOfDay = new Date(targetDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(startOfDay);
+    endOfDay.setDate(endOfDay.getDate() + 1);
+
+    const checkIns = await CheckInLog.find({
+      session,
+      timestamp: { $gte: startOfDay, $lt: endOfDay },
+    })
+      .populate('camperId', 'firstName lastName')
+      .populate('performedBy', 'fullName')
+      .sort({ timestamp: -1 });
+
+    return checkIns.map((log) => {
+      const camper = log.camperId as any;
+      const user = log.performedBy as any;
+      
+      return {
+        fullname: `${camper?.firstName || ''} ${camper?.lastName || ''}`.trim(),
+        checkedInBy: user?.fullName || '',
+        busId: log.busId || null,
+        time: log.timestamp,
+      };
+    });
+  }
 }
 
 export default new CheckInService();

@@ -190,3 +190,31 @@ export const getDailySummary = asyncHandler(async (req: AuthRequest, res: Respon
     new ApiResponse(HTTP_STATUS.OK, summary, 'Daily session summary retrieved successfully')
   );
 });
+
+export const getSessionCheckIns = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { session, date } = req.query;
+
+  if (!session || typeof session !== 'string') {
+    res.status(HTTP_STATUS.BAD_REQUEST).json(
+      new ApiResponse(HTTP_STATUS.BAD_REQUEST, null, 'session query parameter is required')
+    );
+    return;
+  }
+
+  if (!['morning', 'afternoon', 'evening', 'night'].includes(session)) {
+    res.status(HTTP_STATUS.BAD_REQUEST).json(
+      new ApiResponse(HTTP_STATUS.BAD_REQUEST, null, 'Invalid session. Must be morning, afternoon, evening, or night')
+    );
+    return;
+  }
+
+  const targetDate = date ? new Date(date as string) : undefined;
+  const checkIns = await checkinService.getSessionCheckIns(
+    session as 'morning' | 'afternoon' | 'evening' | 'night',
+    targetDate
+  );
+
+  res.status(HTTP_STATUS.OK).json(
+    new ApiResponse(HTTP_STATUS.OK, { checkIns }, 'Session check-ins retrieved successfully')
+  );
+});

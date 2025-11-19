@@ -8,7 +8,7 @@ import {
   checkInBulkSchema,
   checkInByPhoneSchema,
 } from '../validators/camper.validator';
-import { protect } from '../middleware/auth.middleware';
+import { protect, authorize } from '../middleware/auth.middleware';
 
 const router = Router();
 
@@ -29,5 +29,6 @@ router.get('/bus/:busId/verify', checkinController.verifyBusTally);
 router.get('/bus/:busId/checkins', checkinController.getBusCheckIns);
 router.get('/camper/:camperId/sessions', checkinController.getSessionStatus);
 router.get('/summary', checkinController.getDailySummary);
+router.get('/session/checkins', authorize('admin'), checkinController.getSessionCheckIns);
 
 export default router;
