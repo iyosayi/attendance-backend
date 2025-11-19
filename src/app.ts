@@ -10,6 +10,9 @@ import logger from './utils/logger';
 
 const app: Application = express();
 
+// Trust proxy - required when behind reverse proxy (Docker, nginx, etc.)
+app.set('trust proxy', true);
+
 // Security middleware
 app.use(helmet());
 
