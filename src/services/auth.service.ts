@@ -42,10 +42,10 @@ class AuthService {
   }
 
   async login(email: string, password: string): Promise<{ user: IUser; token: string }> {
-    logger.info('Login attempt', JSON.stringify({ email, password }));
+    logger.info('Login attempt', { email, password });
     // Find user with password field
     const user = await User.findOne({ email }).select('+password');
-    logger.info('User found', JSON.stringify({ user }));
+    logger.info('User found', { user });
 
     if (!user) {
       throw new ApiError(HTTP_STATUS.UNAUTHORIZED, 'Invalid credentials');
@@ -57,7 +57,7 @@ class AuthService {
 
     // Check password
     const isPasswordValid = await user.comparePassword(password);
-    logger.info('Password valid', JSON.stringify({ isPasswordValid }));
+    logger.info('Password valid', { isPasswordValid });
     if (!isPasswordValid) {
       throw new ApiError(HTTP_STATUS.UNAUTHORIZED, 'Invalid credentials');
     }
