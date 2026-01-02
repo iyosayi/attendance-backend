@@ -13,6 +13,7 @@
     "bulk:campers": "ts-node scripts/bulkCreateCampers.ts",
     "import:campers": "ts-node scripts/importCampers.ts",
     "import:rooms": "ts-node scripts/importRooms.ts",
+    "reconcile:rooms": "ts-node scripts/reconcileRoomsFromCampers.ts",
     "assign:codes": "ts-node scripts/assignCamperCodes.ts",
     "get-checked-in-by-location": "ts-node scripts/getCheckedInByLocation.ts",
     "update:passwords": "ts-node scripts/updateUserPasswords.ts",
