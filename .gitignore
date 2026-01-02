@@ -44,3 +44,6 @@ tmp/
 
 # PM2
 .pm2/
+branch_structure.json
+temp_auto_push.bat
+temp_interactive_push.bat

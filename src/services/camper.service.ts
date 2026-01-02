@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Camper, { ICamper } from '../models/Camper';
 import User from '../models/User';
 import Room from '../models/Room';
@@ -8,6 +9,34 @@ import { generatePaginationMeta } from '../utils/helpers';
 import cacheService from './cache.service';
 
 const MONGODB_OBJECT_ID_REGEX = /^[0-9a-fA-F]{24}$/;
+
+function normalizeRoomIdentifier(input: unknown): string | null {
+  if (input === undefined) return null;
+  if (input === null) return null;
+
+  const str = String(input).trim();
+  if (!str) return null;
+  return str;
+}
+
+function isMongoObjectIdLike(value: string): boolean {
+  return MONGODB_OBJECT_ID_REGEX.test(value);
+}
+
+async function findActiveRoomByIdentifier(
+  roomIdentifier: string,
+  session?: mongoose.ClientSession
+) {
+  const filter = isMongoObjectIdLike(roomIdentifier)
+    ? { _id: roomIdentifier, isActive: true }
+    : { roomNumber: roomIdentifier, isActive: true };
+
+  if (session) {
+    return Room.findOne(filter).session(session);
+  }
+
+  return Room.findOne(filter);
+}
 
 async function normalizeCamperRoomIdsToRoomNumbers(
   campers: Array<any>
@@ -66,9 +95,13 @@ class CamperService {
       camperPayload.checkInTime = new Date();
     }
 
-    // Handle roomId - accept as free-form string and trim whitespace
-    if (camperData.roomId !== undefined && camperData.roomId !== null && camperData.roomId !== '') {
-      camperPayload.roomId = String(camperData.roomId).trim();
+    // Handle room assignment (roomId is provided as either a Room _id or roomNumber).
+    // IMPORTANT: We do NOT set Camper.roomId directly here because we must keep
+    // Room.currentOccupancy and Room.camperIds in sync with capacity enforcement.
+    const desiredRoomIdentifier =
+      camperData.roomId !== undefined ? normalizeRoomIdentifier(camperData.roomId) : null;
+    if (desiredRoomIdentifier) {
+      delete camperPayload.roomId;
     }
 
     // If status is explicitly set to checked-in, ensure checkInTime is set
@@ -77,6 +110,8 @@ class CamperService {
       camperPayload.checkInTime = new Date();
     }
 
+    // If no room assignment is requested, keep simple create flow
+    if (!desiredRoomIdentifier) {
     const camper = await Camper.create(camperPayload);
 
     // Invalidate cache since new camper was created
@@ -85,6 +120,79 @@ class CamperService {
     logger.info('Camper created', { camperId: camper._id, email: camper.email });
 
     return camper;
+    }
+
+    // Room assignment requested: do it atomically with occupancy tracking + capacity guard
+    const session = await mongoose.startSession();
+    let createdCamper: ICamper | null = null;
+    let assignedRoomId: string | null = null;
+
+    try {
+      session.startTransaction();
+
+      // 1) Create camper first (unassigned)
+      createdCamper = await Camper.create([camperPayload], { session }).then((docs) => docs[0]);
+      if (!createdCamper) {
+        throw new ApiError(HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Unable to create camper');
+      }
+
+      // 2) Resolve room and increment occupancy atomically with capacity guard
+      const desiredRoom = await findActiveRoomByIdentifier(desiredRoomIdentifier, session);
+      if (!desiredRoom) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_CODES.ROOM_NOT_FOUND);
+      }
+
+      const incrementedRoom = await Room.findOneAndUpdate(
+        {
+          _id: desiredRoom._id,
+          isActive: true,
+          camperIds: { $ne: createdCamper._id },
+          $expr: { $lt: ['$currentOccupancy', '$capacity'] },
+        },
+        {
+          $inc: { currentOccupancy: 1, version: 1 },
+          $push: { camperIds: createdCamper._id },
+          $set: { updatedBy: finalUserId },
+        },
+        { new: true, session, runValidators: true }
+      );
+
+      if (!incrementedRoom) {
+        throw new ApiError(HTTP_STATUS.CONFLICT, ERROR_CODES.ROOM_FULL);
+      }
+
+      assignedRoomId = String(incrementedRoom._id);
+
+      // 3) Update camper to store roomNumber in camper.roomId
+      createdCamper = await Camper.findByIdAndUpdate(
+        createdCamper._id,
+        { roomId: String(incrementedRoom.roomNumber), updatedBy: finalUserId },
+        { new: true, session, runValidators: true }
+      );
+
+      if (!createdCamper) {
+        throw new ApiError(HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Unable to update camper room assignment');
+      }
+
+      await session.commitTransaction();
+    } catch (err) {
+      await session.abortTransaction();
+      throw err;
+    } finally {
+      session.endSession();
+    }
+
+    // Invalidate caches impacted by new camper + room occupancy changes
+    if (assignedRoomId) await cacheService.invalidate(`room:${assignedRoomId}`);
+    await cacheService.invalidate('stats:overview');
+
+    logger.info('Camper created (with room assignment)', {
+      camperId: createdCamper._id,
+      email: createdCamper.email,
+      roomId: assignedRoomId,
+    });
+
+    return createdCamper;
   }
 
   async getCamperById(camperId: string): Promise<ICamper> {
@@ -252,7 +360,147 @@ class CamperService {
       }
     }
 
-    // Perform the update
+    // If the request includes roomId, we must keep Room.currentOccupancy in sync
+    if (updateData.roomId !== undefined) {
+      const desiredRoomIdentifier = normalizeRoomIdentifier(updateData.roomId);
+
+      const session = await mongoose.startSession();
+      let updatedCamper: ICamper | null = null;
+      let currentRoomId: string | null = null;
+      let nextRoomId: string | null = null;
+
+      try {
+        session.startTransaction();
+
+        const camperInTx = await Camper.findOne({ _id: camperId, isDeleted: false }).session(session);
+        if (!camperInTx) {
+          throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_CODES.CAMPER_NOT_FOUND);
+        }
+
+        // Prefer the room record as source-of-truth for current assignment (camperIds list),
+        // because Camper.roomId is a string and may be either roomNumber or a room _id.
+        let currentRoom = await Room.findOne({ camperIds: camperInTx._id }).session(session);
+        let currentRoomFoundVia: 'camperIds' | 'camperRoomId' | null = currentRoom ? 'camperIds' : null;
+
+        // Fallback: if the room document doesn't contain the camperId for some reason,
+        // try to resolve the current room via the camper's stored roomId.
+        if (!currentRoom && camperInTx.roomId) {
+          const existingRoomIdentifier = normalizeRoomIdentifier(camperInTx.roomId);
+          if (existingRoomIdentifier) {
+            const filter = isMongoObjectIdLike(existingRoomIdentifier)
+              ? { _id: existingRoomIdentifier }
+              : { roomNumber: existingRoomIdentifier };
+            currentRoom = await Room.findOne(filter).session(session);
+            if (currentRoom) currentRoomFoundVia = 'camperRoomId';
+          }
+        }
+
+        currentRoomId = currentRoom?._id ? String(currentRoom._id) : null;
+
+        const desiredRoom = desiredRoomIdentifier
+          ? await findActiveRoomByIdentifier(desiredRoomIdentifier, session)
+          : null;
+
+        if (desiredRoomIdentifier && !desiredRoom) {
+          throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_CODES.ROOM_NOT_FOUND);
+        }
+
+        nextRoomId = desiredRoom?._id ? String(desiredRoom._id) : null;
+
+        const isSameRoom =
+          currentRoomId && nextRoomId && String(currentRoomId) === String(nextRoomId);
+
+        // If changing rooms (or removing), update rooms atomically to prevent race conditions.
+        if (!isSameRoom) {
+          // 1) Increment destination room (with capacity guard) BEFORE decrementing source room
+          // so a failure doesn't accidentally "free" capacity while leaving camper unassigned.
+          if (desiredRoom) {
+            const incremented = await Room.findOneAndUpdate(
+              {
+                _id: desiredRoom._id,
+                isActive: true,
+                camperIds: { $ne: camperInTx._id },
+                $expr: { $lt: ['$currentOccupancy', '$capacity'] },
+              },
+              {
+                $inc: { currentOccupancy: 1, version: 1 },
+                $push: { camperIds: camperInTx._id },
+                $set: { updatedBy: userId },
+              },
+              { new: true, session, runValidators: true }
+            );
+
+            if (!incremented) {
+              throw new ApiError(HTTP_STATUS.CONFLICT, ERROR_CODES.ROOM_FULL);
+            }
+          }
+
+          // 2) Decrement source room if currently assigned
+          if (currentRoom) {
+            const decremented = await Room.findOneAndUpdate(
+              {
+                _id: currentRoom._id,
+                $expr: { $gte: ['$currentOccupancy', 1] },
+                ...(currentRoomFoundVia === 'camperIds' ? { camperIds: camperInTx._id } : {}),
+              },
+              {
+                $inc: { currentOccupancy: -1 },
+                $pull: { camperIds: camperInTx._id },
+                $set: { updatedBy: userId },
+              },
+              { new: true, session }
+            );
+
+            // If occupancy is already 0 (data inconsistency), avoid going negative but still
+            // ensure camperId is removed from the room's camper list.
+            if (!decremented) {
+              await Room.findOneAndUpdate(
+                { _id: currentRoom._id, camperIds: camperInTx._id },
+                { $pull: { camperIds: camperInTx._id }, $set: { updatedBy: userId } },
+                { session }
+              );
+            }
+          }
+        }
+
+        // Camper.roomId is a string. We store the human identifier (roomNumber),
+        // consistent with RoomService.assignCamperToRoom.
+        updateObject.roomId = desiredRoom ? String(desiredRoom.roomNumber) : null;
+
+        updatedCamper = await Camper.findOneAndUpdate(
+          { _id: camperId, isDeleted: false },
+          updateObject,
+          { new: true, runValidators: true, session }
+        );
+
+        if (!updatedCamper) {
+          throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_CODES.CAMPER_NOT_FOUND);
+        }
+
+        await session.commitTransaction();
+      } catch (err) {
+        await session.abortTransaction();
+        throw err;
+      } finally {
+        session.endSession();
+      }
+
+      // Invalidate caches impacted by room assignment changes
+      if (currentRoomId) await cacheService.invalidate(`room:${currentRoomId}`);
+      if (nextRoomId) await cacheService.invalidate(`room:${nextRoomId}`);
+      await cacheService.invalidate('stats:overview');
+
+      logger.info('Camper updated', {
+        camperId: updatedCamper._id,
+        updatedFields: Object.keys(updateData),
+        statusChanged: updateData.status ? updateData.status !== currentCamper.status : false,
+        roomChanged: true,
+      });
+
+      return updatedCamper;
+    }
+
+    // Perform the update (no room assignment change requested)
     const camper = await Camper.findOneAndUpdate(
       { _id: camperId, isDeleted: false },
       updateObject,
@@ -270,6 +518,7 @@ class CamperService {
       camperId: camper._id,
       updatedFields: Object.keys(updateData),
       statusChanged: updateData.status ? updateData.status !== currentCamper.status : false,
+      roomChanged: false,
     });
 
     return camper;
