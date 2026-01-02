@@ -1,10 +1,44 @@
 import Camper, { ICamper } from '../models/Camper';
 import User from '../models/User';
+import Room from '../models/Room';
 import ApiError from '../utils/ApiError';
 import { HTTP_STATUS, ERROR_CODES, CAMPER_STATUS } from '../constants';
 import logger from '../utils/logger';
 import { generatePaginationMeta } from '../utils/helpers';
 import cacheService from './cache.service';
+
+const MONGODB_OBJECT_ID_REGEX = /^[0-9a-fA-F]{24}$/;
+
+async function normalizeCamperRoomIdsToRoomNumbers(
+  campers: Array<any>
+): Promise<void> {
+  const objectIdLikeRoomIds = Array.from(
+    new Set(
+      campers
+        .map((c) => c?.roomId)
+        .filter((roomId) => typeof roomId === 'string' && MONGODB_OBJECT_ID_REGEX.test(roomId))
+    )
+  );
+
+  if (objectIdLikeRoomIds.length === 0) return;
+
+  const rooms = await Room.find({ _id: { $in: objectIdLikeRoomIds } })
+    .select('_id roomNumber')
+    .lean();
+
+  const roomIdToNumber = new Map<string, string>(
+    rooms.map((r: any) => [String(r._id), String(r.roomNumber)])
+  );
+
+  for (const camper of campers) {
+    const current = camper?.roomId;
+    if (typeof current !== 'string') continue;
+    const roomNumber = roomIdToNumber.get(current);
+    if (!roomNumber) continue;
+    // Mutate for response serialization (do not change the API field name)
+    camper.roomId = roomNumber;
+  }
+}
 
 class CamperService {
   async createCamper(camperData: Partial<ICamper>, userId: string | null): Promise<ICamper> {
@@ -61,6 +95,8 @@ class CamperService {
     if (!camper) {
       throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_CODES.CAMPER_NOT_FOUND);
     }
+
+    await normalizeCamperRoomIdsToRoomNumbers([camper]);
 
     return camper;
   }
@@ -128,6 +164,8 @@ class CamperService {
       camperQuery,
       Camper.countDocuments(query),
     ]);
+
+    await normalizeCamperRoomIdsToRoomNumbers(campers as any[]);
 
     // Generate pagination metadata
     const paginationMeta = isSearching

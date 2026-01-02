@@ -1,7 +1,13 @@
 import { Router } from 'express';
 import * as roomController from '../controllers/room.controller';
 import { validate } from '../middleware/validation.middleware';
-import { createRoomSchema, updateRoomSchema, assignCamperSchema, removeCamperSchema } from '../validators/room.validator';
+import {
+  createRoomSchema,
+  updateRoomSchema,
+  assignCamperSchema,
+  removeCamperSchema,
+  bulkAssignRoomSchema,
+} from '../validators/room.validator';
 import { protect, authorize } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -12,6 +18,8 @@ router.use(protect);
 router.post('/', authorize('admin'), validate(createRoomSchema), roomController.createRoom);
 router.get('/', roomController.getAllRooms);
 router.get('/available', roomController.getAvailableRooms);
+router.post('/bulk-assign', validate(bulkAssignRoomSchema), roomController.bulkAssign);
+router.get('/number/:roomNumber', roomController.getRoomByRoomNumber);
 router.get('/:id', roomController.getRoomById);
 router.put('/:id', authorize('admin'), validate(updateRoomSchema), roomController.updateRoom);
 router.post('/:id/assign', validate(assignCamperSchema), roomController.assignCamperToRoom);

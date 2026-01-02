@@ -21,6 +21,14 @@ export const getRoomById = asyncHandler(async (req: AuthRequest, res: Response) 
   );
 });
 
+export const getRoomByRoomNumber = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const room = await roomService.getRoomByRoomNumber(req.params.roomNumber);
+
+  res.status(HTTP_STATUS.OK).json(
+    new ApiResponse(HTTP_STATUS.OK, { room }, 'Room retrieved successfully')
+  );
+});
+
 export const getAllRooms = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { page, limit, isActive, building, floor, search } = req.query;
   const result = await roomService.getAllRooms({
@@ -73,6 +81,14 @@ export const getAvailableRooms = asyncHandler(async (_req: AuthRequest, res: Res
 
   res.status(HTTP_STATUS.OK).json(
     new ApiResponse(HTTP_STATUS.OK, { rooms }, 'Available rooms retrieved successfully')
+  );
+});
+
+export const bulkAssign = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const result = await roomService.bulkAssignToRoomNumber(req.body, req.user._id);
+
+  res.status(HTTP_STATUS.OK).json(
+    new ApiResponse(HTTP_STATUS.OK, result, 'Bulk room assignment completed')
   );
 });
 

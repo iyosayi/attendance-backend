@@ -49,3 +49,34 @@ export const removeCamperSchema = Joi.object({
       'any.required': 'Camper ID is required',
     }),
 });
+
+export const bulkAssignRoomSchema = Joi.object({
+  roomNumber: Joi.string().min(1).max(20).required().messages({
+    'string.min': 'Room number must be at least 1 character',
+    'string.max': 'Room number must not exceed 20 characters',
+    'any.required': 'Room number is required',
+  }),
+  maxCapacity: Joi.number().min(1).max(50).required().messages({
+    'number.min': 'Capacity must be at least 1',
+    'number.max': 'Capacity must not exceed 50',
+    'any.required': 'Capacity is required',
+  }),
+  existingCamperIds: Joi.array()
+    .items(
+      Joi.string()
+        .pattern(/^[0-9a-fA-F]{24}$/)
+        .messages({ 'string.pattern.base': 'Invalid camper ID format' })
+    )
+    .default([]),
+  newCampers: Joi.array()
+    .items(
+      Joi.object({
+        firstName: Joi.string().min(1).max(100).required(),
+        lastName: Joi.string().min(1).max(100).required(),
+        phone: Joi.string().min(3).max(30).required(),
+        state: Joi.string().min(1).max(100).required(),
+        gender: Joi.string().valid('Male', 'Female').required(),
+      })
+    )
+    .default([]),
+});

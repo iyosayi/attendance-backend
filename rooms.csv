@@ -1,0 +1,28 @@
+roomNumber,capacity,taken,building,floor,reserved,notes
+D403,4,0,Boys Hostel,Block D,false,
+D404,4,0,Boys Hostel,Block D,false,
+D405,8,0,Boys Hostel,Block D,false,
+D406,8,0,Boys Hostel,Block D,false,
+D407,2,0,Boys Hostel,Block D,true,Reserve
+D408,8,0,Boys Hostel,Block D,false,
+D409,8,0,Boys Hostel,Block D,false,
+D411,3,0,Boys Hostel,Block D,false,
+E503,8,0,Boys Hostel,Block E,false,
+E504,8,0,Boys Hostel,Block E,false,
+E505,6,0,Boys Hostel,Block E,false,
+E506,8,0,Boys Hostel,Block E,false,
+E507,3,0,Boys Hostel,Block E,true,Reserve
+E508,8,4,Boys Hostel,Block E,false,4 taken
+E509,4,3,Boys Hostel,Block E,false,3 taken
+E510,7,7,Boys Hostel,Block E,false,All taken
+E511,3,0,Boys Hostel,Block E,false,
+A110,8,0,Female Hostel,Block A,true,Reserve
+A111,10,0,Female Hostel,Block A,false,
+A112,8,8,Female Hostel,Block A,false,All taken
+A113,19,0,Female Hostel,Block A,false,
+A114,8,0,Female Hostel,Block A,false,
+A115,21,0,Female Hostel,Block A,false,
+A116,9,0,Female Hostel,Block A,false,
+A117,9,0,Female Hostel,Block A,false,
+A118,9,0,Female Hostel,Block A,false,
+A119,21,0,Female Hostel,Block A,false,
