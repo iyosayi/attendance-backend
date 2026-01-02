@@ -11,7 +11,7 @@ export const createCamperSchema = Joi.object({
     'string.max': 'Last name must not exceed 50 characters',
     'any.required': 'Last name is required',
   }),
-  email: Joi.string().email().optional().messages({
+  email: Joi.string().email().empty('').optional().messages({
     'string.email': 'Please provide a valid email address',
   }),
   phone: Joi.string()
@@ -26,7 +26,7 @@ export const createCamperSchema = Joi.object({
     'string.max': 'State must not exceed 100 characters',
     'any.required': 'State is required',
   }),
-  subRegion: Joi.string().min(2).max(100).optional().messages({
+  subRegion: Joi.string().min(2).max(100).empty('').optional().messages({
     'string.min': 'Sub region must be at least 2 characters',
     'string.max': 'Sub region must not exceed 100 characters',
   }),
@@ -61,12 +61,12 @@ export const createCamperSchema = Joi.object({
 export const updateCamperSchema = Joi.object({
   firstName: Joi.string().min(2).max(50).optional(),
   lastName: Joi.string().min(2).max(50).optional(),
-  email: Joi.string().email().optional(),
+  email: Joi.string().email().empty('').optional(),
   phone: Joi.string()
     .pattern(/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/)
     .optional(),
   state: Joi.string().min(2).max(100).optional(),
-  subRegion: Joi.string().min(2).max(100).optional().messages({
+  subRegion: Joi.string().min(2).max(100).empty('').optional().messages({
     'string.min': 'Sub region must be at least 2 characters',
     'string.max': 'Sub region must not exceed 100 characters',
   }),

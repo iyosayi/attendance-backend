@@ -6,6 +6,9 @@ import { protect, authorize } from '../middleware/auth.middleware';
 
 const router = Router();
 
+// Public self-signup route (no authentication required)
+router.post('/signup', validate(createCamperSchema), camperController.signupCamper);
+
 // All routes require authentication
 router.use(protect);
 

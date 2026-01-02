@@ -1,9 +1,17 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import asyncHandler from '../utils/asyncHandler';
 import ApiResponse from '../utils/ApiResponse';
 import camperService from '../services/camper.service';
 import { HTTP_STATUS } from '../constants';
 import { AuthRequest } from '../middleware/auth.middleware';
+
+export const signupCamper = asyncHandler(async (req: Request, res: Response) => {
+  const camper = await camperService.createCamper(req.body, null);
+
+  res.status(HTTP_STATUS.CREATED).json(
+    new ApiResponse(HTTP_STATUS.CREATED, { camper }, 'Camper signed up successfully')
+  );
+});
 
 export const createCamper = asyncHandler(async (req: AuthRequest, res: Response) => {
   const camper = await camperService.createCamper(req.body, req.user._id);

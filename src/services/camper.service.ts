@@ -1,4 +1,5 @@
 import Camper, { ICamper } from '../models/Camper';
+import User from '../models/User';
 import ApiError from '../utils/ApiError';
 import { HTTP_STATUS, ERROR_CODES, CAMPER_STATUS } from '../constants';
 import logger from '../utils/logger';
@@ -6,12 +7,22 @@ import { generatePaginationMeta } from '../utils/helpers';
 import cacheService from './cache.service';
 
 class CamperService {
-  async createCamper(camperData: Partial<ICamper>, userId: string): Promise<ICamper> {
+  async createCamper(camperData: Partial<ICamper>, userId: string | null): Promise<ICamper> {
+    // If userId is not provided (self-signup), use system admin user
+    let finalUserId = userId;
+    if (!finalUserId) {
+      const adminUser = await User.findOne({ email: 'admin@camp.com' });
+      if (!adminUser) {
+        throw new ApiError(HTTP_STATUS.INTERNAL_SERVER_ERROR, 'System user not found');
+      }
+      finalUserId = adminUser._id.toString();
+    }
+
     // Prepare camper data
     const camperPayload: any = {
       ...camperData,
-      createdBy: userId,
-      updatedBy: userId,
+      createdBy: finalUserId,
+      updatedBy: finalUserId,
     };
 
     // If isCamping is true and status is not explicitly provided, set status to checked-in

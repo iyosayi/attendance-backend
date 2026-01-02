@@ -155,6 +155,7 @@ camperSchema.index({ checkInTime: -1 });
 camperSchema.index({ email: 1, isDeleted: 1 }, { unique: true, sparse: true });
 camperSchema.index({ state: 1, isDeleted: 1 });
 camperSchema.index({ isCamping: 1, isDeleted: 1 });
+camperSchema.index({ isDeleted: 1, isCamping: 1, createdAt: -1 });
 
 // Text index for search
 camperSchema.index({
