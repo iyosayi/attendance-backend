@@ -1,15 +1,41 @@
 import Camper, { ICamper } from '../models/Camper';
 import ApiError from '../utils/ApiError';
-import { HTTP_STATUS, ERROR_CODES } from '../constants';
+import { HTTP_STATUS, ERROR_CODES, CAMPER_STATUS } from '../constants';
 import logger from '../utils/logger';
+import { generatePaginationMeta } from '../utils/helpers';
+import cacheService from './cache.service';
 
 class CamperService {
   async createCamper(camperData: Partial<ICamper>, userId: string): Promise<ICamper> {
-    const camper = await Camper.create({
+    // Prepare camper data
+    const camperPayload: any = {
       ...camperData,
       createdBy: userId,
       updatedBy: userId,
-    });
+    };
+
+    // If isCamping is true and status is not explicitly provided, set status to checked-in
+    if (camperData.isCamping === true && camperData.status === undefined) {
+      camperPayload.status = CAMPER_STATUS.CHECKED_IN;
+      // Set checkInTime when automatically setting status to checked-in
+      camperPayload.checkInTime = new Date();
+    }
+
+    // Handle roomId - accept as free-form string and trim whitespace
+    if (camperData.roomId !== undefined && camperData.roomId !== null && camperData.roomId !== '') {
+      camperPayload.roomId = String(camperData.roomId).trim();
+    }
+
+    // If status is explicitly set to checked-in, ensure checkInTime is set
+    const finalStatus = camperPayload.status || camperData.status || CAMPER_STATUS.PENDING;
+    if (finalStatus === CAMPER_STATUS.CHECKED_IN && !camperPayload.checkInTime) {
+      camperPayload.checkInTime = new Date();
+    }
+
+    const camper = await Camper.create(camperPayload);
+
+    // Invalidate cache since new camper was created
+    await cacheService.invalidate('stats:overview');
 
     logger.info('Camper created', { camperId: camper._id, email: camper.email });
 
@@ -18,7 +44,6 @@ class CamperService {
 
   async getCamperById(camperId: string): Promise<ICamper> {
     const camper = await Camper.findOne({ _id: camperId, isDeleted: false })
-      .populate('roomId', 'roomNumber roomName building floor')
       .populate('createdBy', 'fullName email')
       .populate('updatedBy', 'fullName email');
 
@@ -34,9 +59,34 @@ class CamperService {
     limit?: number;
     status?: string;
     search?: string;
-  }): Promise<{ campers: ICamper[]; total: number; page: number; totalPages: number }> {
+    isCamping?: boolean;
+  }): Promise<{
+    docs: ICamper[];
+    totalDocs: number;
+    totalPages: number;
+    hasPrevPage: boolean;
+    hasNextPage: boolean;
+    prevPage: number | null;
+    nextPage: number | null;
+    page: number;
+    limit: number;
+  }> {
     const query: any = { isDeleted: false };
+    
+    // Handle isCamping filter
+    // If isCamping is explicitly true, return only campers (isCamping = true)
+    // If isCamping is false or not provided, return non-campers (isCamping != true, including false, null, undefined)
+    if (filters.isCamping === true) {
+      query.isCamping = true;
+    } else {
+      // Default to non-campers: include false, null, and undefined
+      // Using $ne: true is simpler and handles all edge cases
+      query.isCamping = { $ne: true };
+    }
+    
     // if (filters.status) query.status = filters.status;
+    
+    // Handle search filter
     if (filters.search) {
       // Use regex for more flexible search across name, email, phone, and code
       const searchRegex = new RegExp(filters.search, 'i');
@@ -56,7 +106,6 @@ class CamperService {
     const skip = isSearching ? 0 : (page - 1) * limit;
 
     const camperQuery = Camper.find(query)
-      .populate('roomId', 'roomNumber roomName')
       .sort({ createdAt: -1 });
 
     // Only apply skip/limit if not searching
@@ -64,16 +113,28 @@ class CamperService {
       camperQuery.skip(skip).limit(limit);
     }
 
-    const [campers, total] = await Promise.all([
+    const [campers, totalDocs] = await Promise.all([
       camperQuery,
       Camper.countDocuments(query),
     ]);
 
+    // Generate pagination metadata
+    const paginationMeta = isSearching
+      ? {
+          totalDocs,
+          totalPages: 1,
+          hasPrevPage: false,
+          hasNextPage: false,
+          prevPage: null,
+          nextPage: null,
+          page: 1,
+          limit: totalDocs,
+        }
+      : generatePaginationMeta(totalDocs, page, limit);
+
     return {
-      campers,
-      total,
-      page,
-      totalPages: isSearching ? 1 : Math.ceil(total / limit),
+      docs: campers,
+      ...paginationMeta,
     };
   }
 
@@ -82,12 +143,70 @@ class CamperService {
     updateData: Partial<ICamper>,
     userId: string
   ): Promise<ICamper> {
+    // Get current camper to check status changes
+    const currentCamper = await Camper.findOne({ _id: camperId, isDeleted: false });
+    
+    if (!currentCamper) {
+      throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_CODES.CAMPER_NOT_FOUND);
+    }
+
+    // Prepare update object
+    const updateObject: any = {
+      ...updateData,
+      updatedBy: userId,
+    };
+
+    // If isCamping is set to true and status is not explicitly provided, set status to checked-in
+    if (updateData.isCamping === true && updateData.status === undefined) {
+      updateObject.status = CAMPER_STATUS.CHECKED_IN;
+    }
+
+    // Handle status changes - update checkInTime and checkOutTime accordingly
+    // Check both explicit status and the status set from isCamping logic
+    const newStatus = updateObject.status || updateData.status;
+    if (newStatus && newStatus !== currentCamper.status) {
+      const now = new Date();
+      
+      if (newStatus === CAMPER_STATUS.CHECKED_IN) {
+        // Marking as checked-in: set checkInTime if not already set
+        if (!currentCamper.checkInTime) {
+          updateObject.checkInTime = now;
+        }
+        // Clear checkOutTime if previously checked out
+        if (currentCamper.checkOutTime) {
+          updateObject.checkOutTime = undefined;
+        }
+      } else if (newStatus === CAMPER_STATUS.CHECKED_OUT) {
+        // Marking as checked-out: set checkOutTime if not already set
+        if (!currentCamper.checkOutTime) {
+          updateObject.checkOutTime = now;
+        }
+        // Ensure checkInTime is set (should be, but handle edge case)
+        if (!currentCamper.checkInTime) {
+          updateObject.checkInTime = now;
+        }
+      } else if (newStatus === CAMPER_STATUS.PENDING) {
+        // Resetting to pending: clear check-in/check-out times
+        updateObject.checkInTime = undefined;
+        updateObject.checkOutTime = undefined;
+      }
+    }
+
+    // Handle roomId update - accept as free-form string
+    if (updateData.roomId !== undefined) {
+      // Allow clearing room assignment (null or empty string)
+      if (updateData.roomId === null || updateData.roomId === '') {
+        updateObject.roomId = null;
+      } else {
+        // Store as-is (trim whitespace)
+        updateObject.roomId = String(updateData.roomId).trim();
+      }
+    }
+
+    // Perform the update
     const camper = await Camper.findOneAndUpdate(
       { _id: camperId, isDeleted: false },
-      {
-        ...updateData,
-        updatedBy: userId,
-      },
+      updateObject,
       { new: true, runValidators: true }
     );
 
@@ -95,7 +214,14 @@ class CamperService {
       throw new ApiError(HTTP_STATUS.NOT_FOUND, ERROR_CODES.CAMPER_NOT_FOUND);
     }
 
-    logger.info('Camper updated', { camperId: camper._id });
+    // Invalidate cache since camper data changed
+    await cacheService.invalidate('stats:overview');
+
+    logger.info('Camper updated', {
+      camperId: camper._id,
+      updatedFields: Object.keys(updateData),
+      statusChanged: updateData.status ? updateData.status !== currentCamper.status : false,
+    });
 
     return camper;
   }
@@ -127,7 +253,6 @@ class CamperService {
       code: codeRegex,
       isDeleted: false,
     })
-      .populate('roomId', 'roomNumber roomName')
       .sort({ createdAt: -1 });
 
     return campers;

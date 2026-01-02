@@ -10,12 +10,17 @@ export interface ICamper extends Document {
   code: string;
   firstName: string;
   lastName: string;
-  email: string;
+  email?: string;
   phone: string;
+  state: string;
+  subRegion?: string;
   age?: number;
-  gender?: 'Male' | 'Female' | 'Other';
+  gender?: 'Male' | 'Female';
+  isCamping: boolean;
+  isHelplineMember?: boolean;
+  isNyscCorpMember?: boolean;
   emergencyContact?: IEmergencyContact;
-  roomId?: Types.ObjectId;
+  roomId?: string;
   status: 'pending' | 'checked-in' | 'checked-out';
   checkInTime?: Date;
   checkOutTime?: Date;
@@ -50,7 +55,6 @@ const camperSchema = new Schema<ICamper>(
     },
     email: {
       type: String,
-      required: true,
       trim: true,
       lowercase: true,
       index: true,
@@ -60,6 +64,16 @@ const camperSchema = new Schema<ICamper>(
       required: true,
       trim: true,
     },
+    state: {
+      type: String,
+      required: true,
+      trim: true,
+      index: true,
+    },
+    subRegion: {
+      type: String,
+      trim: true,
+    },
     age: {
       type: Number,
       min: 0,
@@ -67,7 +81,23 @@ const camperSchema = new Schema<ICamper>(
     },
     gender: {
       type: String,
-      enum: ['Male', 'Female', 'Other'],
+      enum: ['Male', 'Female'],
+    },
+    isCamping: {
+      type: Boolean,
+      required: true,
+      default: false,
+      index: true,
+    },
+    isHelplineMember: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    isNyscCorpMember: {
+      type: Boolean,
+      default: false,
+      index: true,
     },
     emergencyContact: {
       name: { type: String, trim: true },
@@ -75,8 +105,8 @@ const camperSchema = new Schema<ICamper>(
       relationship: { type: String, trim: true },
     },
     roomId: {
-      type: Schema.Types.ObjectId,
-      ref: 'Room',
+      type: String,
+      trim: true,
       index: true,
     },
     status: {
@@ -122,7 +152,9 @@ camperSchema.index({ firstName: 1, lastName: 1 });
 camperSchema.index({ status: 1, isDeleted: 1 });
 camperSchema.index({ roomId: 1, status: 1 });
 camperSchema.index({ checkInTime: -1 });
-camperSchema.index({ email: 1, isDeleted: 1 }, { unique: true });
+camperSchema.index({ email: 1, isDeleted: 1 }, { unique: true, sparse: true });
+camperSchema.index({ state: 1, isDeleted: 1 });
+camperSchema.index({ isCamping: 1, isDeleted: 1 });
 
 // Text index for search
 camperSchema.index({

@@ -374,3 +374,8 @@ const bulkCreateCampers = async () => {
 // Run the script
 bulkCreateCampers();
 
+
+
+
+
+

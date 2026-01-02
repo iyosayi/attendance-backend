@@ -1,0 +1,315 @@
+ID,First Name,Last Name,Gender,Notes
+A25,Teresa,Abanum,Female,
+A27,Stephanie,Euiny,Female,
+A28,Amanda,Tim-Mafo,Female,
+A30,Omisabor,Favour,Female,
+A32,Praise God,Eyiconf OASVWO,Female,
+A33,Snow White,@ko rie,Female,
+A34,Chucwudi,Amaef,Female,Also marked as A47
+A35,Becky,Evetare,Female,
+A36,Tim-Maris,Anita,Female,Duplicate ID - check record
+A36,Deborah,Omolekun,Female,Duplicate ID - check record
+A37,Grace,Enosarebna,Female,
+A38,Precious,,Female,No last name provided
+A39,Egmarewogwes,Wisdom,Female,
+A40,Elohor,Christian,Female,
+A41,Eseophene,KOKO,Female,
+A42,Gbaguo,Favour,Female,
+A43,Martina,Enosegbe,Female,
+A44,Emuiepae,Vivian,Female,
+A45,Ontiore,Ogbu,Female,
+A46,Onuoha,Stephen,Female,
+A47,Ubor,Favour,Female,
+A48,Vichon,Ezidiama,Female,
+A49,Ufuoma,Tigbada,Female,
+A50,Evett,Midsneze,Female,
+A51,Bernice,Kingley,Female,
+A52,Doreen,Kingley,Female,
+A53,Susanna,Ogbu,Female,
+A54,Egbuure,Esuond,Female,
+A55,Egbuure,Suruve,Female,
+A56,Emele,Emommotimi,Female,
+A57,e Divine,Philip,Female,
+A58,David,Oke,Female,
+A60,Moses,Snan,Female,
+A61,Onome,Gift,Female,
+A62,Adeauji,Winnie,Female,
+A63,Egetagbe,Favour,Female,
+A64,David,Ore,Female,
+A65,Ogadhams,,Female,No last name provided
+A66,Rejoice,,Female,No last name provided
+A67,Hosanna,,Female,No last name provided
+A68,Simeons,Precious,Female,
+A69,Olive,Ngozi,Female,
+A70,Blessed,Ilovs,Female,
+A71,Omo,Lizzy,Female,
+A72,Miracle,,Female,Checkmarked
+A73,Esther,,Female,Checkmarked
+A74,Miracle,,Female,No last name provided
+A75,Divine,,Female,No last name provided
+A76,Princess,,Female,No last name provided
+A77,Eveg,,Female,No last name provided
+A78,Ebuno,,Female,No last name provided
+A79,Frank,Glory,Female,
+A80,Samuel,Ohloiebo,Female,
+A81,Godwin,Mercy,Female,
+A82,Maritas,Amnes,Female,
+A83,Abdul,Fatiu,Female,HD note
+A84,Uzen,Precious,Female,
+A85,Abdul,Azeez,Female,
+A86,Abdul Snam,Esther,Female,
+A87,Ahmed,Glory,Female,
+A88,Shizua,Ruth,Female,
+A89,Elvis,Favour,Female,
+A90,Beauty,,Female,Marked with *
+A91,Omolomo,Aniswana,Female,HD note
+A92,Isiy,Treasure,Female,
+A93,Onope,Mary,Female,
+A94,Vincent,Eunice,Female,Marked with ~
+A95,Joseph,Mercy,Female,
+A96,Okiari,Jennifer,Female,
+A97,Joshua,Manf,Female,
+A98,Euclepsis,Swenos,Female,Appears crossed out
+A101,Millicent,,Female,Room 145
+A102,Idible,Faith,Female,Room 145
+A103,Success,,Female,Room 145 - no last name
+A104,Etoze,Fivia,Female,Room 145
+A105,Janet,Joseph,Female,Room 145 / Room 115 - crossed out A105 -> A118
+A106,Grace,,Female,Room 145 - no last name
+A107,Sunlom,,Female,Room 145 / Room 115 (Sharing)
+A108,Promise,Adee,Female,Room 145
+A109,Santos,Jossics,Female,Room 145 / Room 115
+A110,Igna,Jly,Female,Room 145 / Room 115 - A122
+A111,Favour,,Female,Room 145 - no last name
+A112,Testimony,Omanuji,Female,Room 145
+A113,Newness,Adee,Female,Room 145 / Room 115 - A128
+A114,Ossere,Ictibas,Female,Room 145
+A115,Atongbe,Uyibas,Female,Room 145
+A116,Mercy,Goodwin,Female,Room 145
+A117,Precious,Deba,Female,Room 145
+A118,Rusof,,Female,No last name / Room 115 (Janet reassigned)
+A119,Favor,Omnoghinos,Female,
+A120,Elisseth,,Female,Crossed out with # / Room 115 (Favour)
+A121,Bendicta,Idris,Female,Room 115 (Promise)
+A122,Osso,Queen,Female,Room 115 / also Igna Jly
+A123,Obsifanghon,Ukuims,Female,Room 115 (Queen osso)
+A124,Favour,Ade,Female,Room 115 (osaiubele)
+A125,Abies,Pamels,Female,Room 115 (Faunt)
+A126,Becky,Afinls,Female,Room 115 (Uyibss)
+A127,Stelis,,Female,No last name
+A128,Anita,Oghenoruks,Female,Room 115 (Favour / Newness)
+A129,Eluji tin,Osaiuele,Female,Room 115 (Janet / Grace)
+A130,Asu,Promise,Female,Room 115 (Obsifanghon)
+A131,Miragel,Sundry,Female,Room 115 (aing Imuse)
+A132,Aqua,Treasure,Female,Room 115 (Imuse precious)
+A133,Ominegbe,Miracle,Female,Room 115 (Elizaset)
+A134,Grielu,Esher,Female,Room 115 (Miragel)
+A135,Becky,,Female,Room 115 - no last name
+A136,Abies,,Female,Room 115 - no last name
+A137,Miracle,,Female,Room 115 - no last name
+A138,Aqua,,Female,Room 115 - no last name
+A139,Asu,,Female,Room 115 - no last name
+A140,Stelis,,Female,Room 115 - no last name
+A141,Anita,,Female,Room 115 - no last name
+A142,Ofuse,,Female,Room 115 - no last name
+A143,Victory,,Female,Room 115 - no last name
+A144,Peace,,Female,Room 115 - no last name
+A145,Updin,Gift,Female,Room 115
+A146,Promise,Dors,Female,Room 115
+A147,Benedicta,,Female,Room 115 / also Sunday Opiss Jly - no last name
+A150,Jessica,Oricu,Female,Room 115
+A151,Jennifer,,Female,Room 115 - no last name
+A152,Joel,Josephine,Female,Room 115 / Kogi State
+A153,Blessing,Idris,Female,Room 115
+A187,Cuelsen,Bkhoguons,Female,Room 117
+A201,Paul,Peniel,Female,Crossed out - marked DM
+A202,Henrietta,Atongh,Female,
+A203,Frances,Martin,Female,
+A204,Adelaide,Craft,Female,
+A205,Jennifer,Oduajs,Female,
+A206,Marclo,Peter,Female,
+A207,Theola,Chulemu,Female,
+A208,Joy,Adeloye,Female,
+A209,Success,Popoyi,Female,
+A210,Peculia,Opus,Female,
+A211,Ononode,Eseoghene Gift,Female,
+A212,Abodi,Idreh,Female,
+A213,Omonioba,Joyce,Female,Marked with #
+A214,Egelder,Gift,Female,Marked with # and *
+A215,Yeous,Promise,Female,Marked with *
+A216,Abadi,Elons,Female,Marked with #
+A217,Regis,Gloladen,Female,LM 119 - marked with #
+A218,Peaca,Timn,Female,LM 119 - marked with #
+A219,Rejoice,,Female,LM 119 - no last name (marked with ")
+A220,Flunson,,Female,LM 119 - no last name (marked with ")
+A221,Beauty,,Female,LM 119 - no last name (marked with ")
+A222,Utany,Oluston,Female,LM 119
+A223,Stephanie,Efeb,Female,LM 119
+A224,Success,Ademiji,Female,LM 119
+A225,Adesums,Omo Lude,Female,LM 119
+A226,LN,ther,Female,LM 119
+A227,Mabi,,Female,LM 119 - no last name
+A228,Atimid,Ojesanmi,Female,LM 119
+A229,Zaza,Mohammed,Female,LM 119
+A230,Nancy,Omilude,Female,LM 119
+A231,Nancy,Efe,Female,LM 119
+A232,Progress,,Female,LM 119 - no last name
+A233,Osunon,Faith,Female,LM 119
+A234,Tega,Evettive,Female,
+A235,Odinatmchi,Biine,Female,
+A236,Omoare,Faith,Female,
+A237,Ogbomon,Egbnen,Female,
+A238,Miracle,,Female,No last name
+A239,Ajeti Efro,Fairs,Female,
+A240,Stephanie,Enosele,Female,
+A241,Temitope,Mohammed,Female,
+A242,May,Made,Female,
+A243,Cilnis,Ufomy,Female,
+A244,Peace,Omuuji,Female,
+A245,Odeleji,Opefemi,Female,
+A246,Benila,Akpauio,Female,
+A247,Andrew,Peace ful,Female,
+A248,Adonafe,,Female,Favor crossed out
+A249,Tentope,,Female,No last name
+A250,Anifa,,Female,No last name
+A251,Belinda,,Female,No last name
+A252,Collet,Tigbodon,Female,
+A253,Precious,Osagede,Female,With arrow
+A254,Blissful,George,Female,
+A255,Rhema,Oshaye,Female,
+A256,Gift,Ezeonmo,Female,
+A257,Robert,Grace,Female,
+A258,Gift,Umukoro,Female,
+A259,Rune,Kiukoro,Female,
+A260,Stella,Daulia,Female,
+A261,Favour,Omorogluwa,Female,
+A262,Valarie,Agbara,Female,
+A263,Precious,Iniomwan,Female,
+A264,Greatness,Ibrihim,Female,
+A265,Ivie,Precious,Female,
+A266,Chiamiz,Precious,Female,
+A267,Favour,Achange,Female,
+A268,Juliet,Purity,Female,
+Jessica,Okikiri,,Female,Kogi State - no ID yet
+Jennifer,Okikiri,,Female,Kogi State - no ID yet
+Idris,Blessing,,Female,Kogi State - no ID yet
+Joseph,Mercy,,Female,Kogi State - no ID yet
+Jimoh,Aisha Dzilad,,Female,Kogi State - possibly A87 - no ID yet
+Yilisa,Grace,,Female,Kogi State - no ID yet
+Eunice,Vincent,,Female,Kogi State - no ID yet
+Muhammed,Ogiza Mary,,Female,Kogi State - no ID yet
+Cnipe,Mary,,Female,Kogi State - no ID yet
+Ezekiel,Esther,,Female,Kogi State - no ID yet
+Evuase,John Hyacinth,,Female,Group leader name - no ID yet
+Eqbo,Joseph,,Female,Evuase group - no ID yet
+Akaburu,Chiamaka Precious,,Female,Evuase group - no ID yet
+Ouwa,Cilferel,,Female,Evuase group - no ID yet
+Jurue,Manoffi,,Female,Evuase group - no ID yet
+E44,Burnbox,Unocro,Male,
+E45,Osanon,Miracle,Male,
+E48,Solomon,Unokho,Male,Not registered
+E50,Promise,Fichitin,Male,
+E51,Blessed,Ojemen,Male,
+E52,Joshua,Uri,Male,
+E53,Elvis,Kelvin,Male,
+E54,Pesir,Smart,Male,
+E65,Komodi,Oghenowegus,Male,
+E66,Daniel,,Male,No last name provided
+E67,Peter,Sanyo,Male,
+E68,Nocwunje,Stephen,Male,Crossed out on original list
+E69,Favour,Isaacs,Male,
+E70,Paul,,Male,No last name provided (marked with >>)
+E71,Ebenze,Odudutu,Male,
+E72,Prosper,Ebinan,Male,
+Eliot,Efemena,Male,Email: elliottefemena@gmail.com | Phone: 9029580206 | Registered: No - No ID yet
+Ochuko,Iruo,Male,Phone: 8079482699 | Registered: No - No ID yet
+Fortune,Udugboa,Female,Phone: 7061621643 | Registered: No - No ID yet
+Elohor,Abadi,Female,Phone: 7030284091 | Registered: No - No ID yet
+Keziah,Gbolotin,Female,Phone: 8089817341 | Registered: No - No ID yet
+Peace,Tiroro,Female,Phone: 8026298547 | Registered: No - No ID yet
+Joy,Ebojie,Female,Phone: 8168130942 | Registered: Yes - No ID yet
+Millicent,Osamudiamen,Female,Phone: 9011659483 | Registered: No - No ID yet
+Shalom,Samuel,Female,Phone: 9041949345 | Registered: No - No ID yet
+Promise,Osas,Female,Phone: 90148462625 | Registered: Yes - No ID yet
+Favour,Achonye,Female,Phone: 8025245362 | Registered: No - No ID yet
+Faith,Ekeze,Female,Phone: 7054777813 | Registered: No - No ID yet
+Oita,Prince,Male,Phone: 8132290829 | Registered: No - No ID yet
+Uyiosa,Atohengbe,Female,Phone: 7030639710 | Registered: No - No ID yet
+Oliver,Clifford,Male,Phone: 9052349055 | Registered: No - No ID yet
+Achonwa,Joy,Female,Phone: 8124539576 | Registered: No - No ID yet
+Ighodalo,Julieta,Female,Phone: 9125483526 - No ID yet
+Liligold,Kalikwu,Female,Phone: 8077235507 - No ID yet
+Solanke,Deborah,Female,Phone: 8104993246 - No ID yet
+Okpataku,Blessing,Female,Phone: 8077594848 - No ID yet
+Aghoghomena,Adu,Female,Phone: 9156458377 - No ID yet
+Nnenna,Jude,Female,Phone: 8141898842 - No ID yet
+Mbakwere,Mariam,Female,Phone: 7061760380 - No ID yet
+Aliaku,Chinenyenwa,Female,Phone: 9156220036 - No ID yet
+Omowa,Faith,Female,Phone: 8104599605 - No ID yet
+Uyoghosa,Peace,Female,Phone: 7045259082 - No ID yet
+Blessing,Nzeruo,Female,Phone: 9032780681 - No ID yet
+Agada,Goodness,Female,Phone: 8140982251 - No ID yet
+Chidera,Enebeli,Female,Phone: 7084276324 - No ID yet
+Favour,Eghosasere,Female,Phone: 8121468971 - No ID yet
+Idiakhon,Emmanuella,Female,Phone: 8138240801 - No ID yet
+Chinoye,John,Female,Phone: 8156913513 - No ID yet
+Imuse,Blessing,Female,Phone: 81427777261 - No ID yet (phone number may need verification)
+Lydia,Abraham,Female,Phone: 9064330749 - No ID yet
+Favour,Umeononuju,Female,Phone: 9168250873 - No ID yet
+Progress,Ogodogu,Female,Checked in - No ID yet
+Abadi,Elohor,Female,No ID yet
+Doren,Kingsley,Female,No ID yet
+Divine,Philip,Female,No ID yet
+Frank,Glory,Female,No ID yet
+Egunure,Eguono,Female,No ID yet
+Shalom,Peghe,Female,No ID yet
+David,Oke,Female,No ID yet
+Great,Ariosaere,Female,No ID yet
+Egunure,Suvew,Female,No ID yet
+Emele,Emomotimi,Female,No ID yet
+Keren,Gbolotein,Female,No ID yet
+Moses,Sarah,Female,No ID yet
+Susanna,Ogbu,Female,No ID yet
+Simakmo,Precious,Female,No ID yet
+Ojagbere Awe,Miracle,Female,No ID yet
+Wisdom,Ishaya,Male,Room 504 - No ID yet
+Destiny,Ishaya,Male,Room 504 - No ID yet
+Jephter,Sunday,Male,Room 504 - No ID yet
+Felix,Tega,Male,Room 504 - No ID yet
+Marvelous,Oseghale,Male,Room 504 - No ID yet
+Providence,Gbolotein,Male,Room 504 - No ID yet
+Marvelous,Tiroro,Male,Room 504 - No ID yet
+Favour,Chukwu,Male,Room 504 - No ID yet
+Miracle,Osahon,Male,Room 507 - No ID yet
+Ekhator,Promise,Male,Room 507 - No ID yet
+Daniel,Irobi,Male,Room 507 - No ID yet
+Solomon,Umukoro,Male,Room 507 - No ID yet
+Blessed,Ojeme,Male,Room 507 - No ID yet (possibly E51 Blessed Ojemen)
+Afam,Nkwoka,Male,Room 508 - No ID yet
+Chukwuebuka,Ikechukwu,Male,Room 508 - No ID yet
+Mmaduakonam,Joshua,Male,Room 508 - No ID yet
+Nezianya,Chiagozie,Male,Room 508 - No ID yet
+Maduelosi,Owen,Male,Room 508 - No ID yet
+Chukwuemeka,Okene,Male,Room 508 - No ID yet
+Zaya,Delight,Male,Room 508 - No ID yet
+Nwobodo,Izunna,Male,Room 508 - No ID yet
+Abraham,Yusuf,Male,Room 508 - No ID yet
+Smart,Precious,Male,Room 510 - No ID yet
+Solomon,Gabriel,Male,Room 510 - No ID yet (possibly E72 - Kano group)
+Shedrack,Emmanuel,Male,Room 510 - Group leader from Kano - No ID yet
+Ehis,Frederick,Male,Room 510 - No ID yet
+Zeynom,Danladi,Male,Room 510 - No ID yet
+Great,Frank,Male,Room 510 - No ID yet
+Enoch,Samuel,Male,Room 510 - No ID yet
+Daniel,Ajayi,Male,Room 510 - Medical team - No ID yet
+Ibrahim,Saidu,Male,Room 511 - No ID yet
+Femsh,Osaheni,Male,Room 511 - No ID yet
+Monday,Emmanuel,Male,Room 511 - No ID yet
+Job,Okoye,Male,Room 511 - No ID yet
+Ezekiel,Johnl,Male,Room 511 - No ID yet
+Shina,Adeniyi,Male,Room 511 - No ID yet
+Oita,Prince,Male,Room 511 - Already in list - No ID yet
+Oliver,Clifford,Male,Room 511 - Already in list - No ID yet
+Omokaro,Samuel,Male,Room 511 - No ID yet
+Simon,Sayo,Male,Room 511 - No ID yet
+Evangel,Joseph,Male,Room 511 - No ID yet

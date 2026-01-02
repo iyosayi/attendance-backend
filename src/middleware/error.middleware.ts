@@ -22,10 +22,48 @@ const errorHandler = (err: any, req: Request, res: Response, _next: NextFunction
     error = new ApiError(HTTP_STATUS.NOT_FOUND, message);
   }
 
-  // Mongoose duplicate key
-  if (err.code === 11000) {
-    const field = Object.keys(err.keyValue)[0];
-    const message = `Duplicate value for field: ${field}`;
+  // Mongoose/MongoDB duplicate key (E11000)
+  if (err.code === 11000 || err.codeName === 'DuplicateKey') {
+    // Extract field name and value from error
+    // Handle both Mongoose and MongoDB driver error structures
+    const keyValue = err.keyValue || err.keyPattern || {};
+    const keyPattern = err.keyPattern || {};
+    
+    // Get the first key from keyValue (most reliable), fallback to keyPattern
+    const field = Object.keys(keyValue).length > 0 
+      ? Object.keys(keyValue)[0] 
+      : Object.keys(keyPattern).length > 0 
+        ? Object.keys(keyPattern)[0]
+        : 'field';
+    
+    const duplicateValue = keyValue[field];
+    
+    // Create user-friendly error messages based on the field
+    let message = '';
+    switch (field) {
+      case 'email':
+        message = duplicateValue 
+          ? `An account with the email "${duplicateValue}" already exists. Please use a different email address.`
+          : 'This email address is already registered. Please use a different email address.';
+        break;
+      case 'code':
+        message = duplicateValue
+          ? `A camper with the code "${duplicateValue}" already exists.`
+          : 'This camper code is already in use.';
+        break;
+      case 'username':
+        message = duplicateValue
+          ? `The username "${duplicateValue}" is already taken. Please choose another username.`
+          : 'This username is already taken. Please choose another username.';
+        break;
+      default:
+        // Generic message with field name and value if available
+        const fieldDisplay = field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, ' $1').trim();
+        message = duplicateValue
+          ? `${fieldDisplay} "${duplicateValue}" is already in use. Please use a different value.`
+          : `This ${fieldDisplay.toLowerCase()} is already in use. Please use a different value.`;
+    }
+    
     error = new ApiError(HTTP_STATUS.CONFLICT, message);
   }
 

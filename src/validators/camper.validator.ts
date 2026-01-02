@@ -11,9 +11,8 @@ export const createCamperSchema = Joi.object({
     'string.max': 'Last name must not exceed 50 characters',
     'any.required': 'Last name is required',
   }),
-  email: Joi.string().email().required().messages({
+  email: Joi.string().email().optional().messages({
     'string.email': 'Please provide a valid email address',
-    'any.required': 'Email is required',
   }),
   phone: Joi.string()
     .pattern(/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/)
@@ -22,8 +21,33 @@ export const createCamperSchema = Joi.object({
       'string.pattern.base': 'Please provide a valid phone number',
       'any.required': 'Phone number is required',
     }),
+  state: Joi.string().min(2).max(100).required().messages({
+    'string.min': 'State must be at least 2 characters',
+    'string.max': 'State must not exceed 100 characters',
+    'any.required': 'State is required',
+  }),
+  subRegion: Joi.string().min(2).max(100).optional().messages({
+    'string.min': 'Sub region must be at least 2 characters',
+    'string.max': 'Sub region must not exceed 100 characters',
+  }),
   age: Joi.number().min(0).max(120).optional(),
-  gender: Joi.string().valid('Male', 'Female', 'Other').optional(),
+  gender: Joi.string().valid('Male', 'Female').optional(),
+  isCamping: Joi.boolean().required().messages({
+    'any.required': 'isCamping is required',
+    'boolean.base': 'isCamping must be a boolean',
+  }),
+  isHelplineMember: Joi.boolean().optional().default(false).messages({
+    'boolean.base': 'isHelplineMember must be a boolean',
+  }),
+  isNyscCorpMember: Joi.boolean().optional().default(false).messages({
+    'boolean.base': 'isNyscCorpMember must be a boolean',
+  }),
+  status: Joi.string().valid('pending', 'checked-in', 'checked-out').optional().messages({
+    'any.only': 'Status must be one of: pending, checked-in, checked-out',
+  }),
+  roomId: Joi.string().optional().messages({
+    'string.base': 'Room ID must be a string',
+  }),
   emergencyContact: Joi.object({
     name: Joi.string().min(2).max(100).optional(),
     phone: Joi.string()
@@ -41,8 +65,22 @@ export const updateCamperSchema = Joi.object({
   phone: Joi.string()
     .pattern(/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/)
     .optional(),
+  state: Joi.string().min(2).max(100).optional(),
+  subRegion: Joi.string().min(2).max(100).optional().messages({
+    'string.min': 'Sub region must be at least 2 characters',
+    'string.max': 'Sub region must not exceed 100 characters',
+  }),
   age: Joi.number().min(0).max(120).optional(),
-  gender: Joi.string().valid('Male', 'Female', 'Other').optional(),
+  gender: Joi.string().valid('Male', 'Female').optional(),
+  isCamping: Joi.boolean().optional(),
+  isHelplineMember: Joi.boolean().optional(),
+  isNyscCorpMember: Joi.boolean().optional(),
+  status: Joi.string().valid('pending', 'checked-in', 'checked-out').optional().messages({
+    'any.only': 'Status must be one of: pending, checked-in, checked-out',
+  }),
+  roomId: Joi.string().optional().messages({
+    'string.base': 'Room ID must be a string',
+  }),
   emergencyContact: Joi.object({
     name: Joi.string().min(2).max(100).optional(),
     phone: Joi.string()

@@ -22,12 +22,33 @@ export const getCamperById = asyncHandler(async (req: AuthRequest, res: Response
 });
 
 export const getAllCampers = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { page, limit, status, search } = req.query;
+  const { page, limit, status, search, isCamping } = req.query;
+  
+  // Parse isCamping query parameter
+  // Handle edge cases: "true", "false", empty string, or undefined
+  // Query params come as strings, so we check for string "true" or "false"
+  let isCampingFilter: boolean | undefined;
+  if (isCamping !== undefined && isCamping !== null) {
+    const isCampingStr = String(isCamping).toLowerCase().trim();
+    if (isCampingStr === 'true' || isCampingStr === '1') {
+      // Explicitly true → return campers
+      isCampingFilter = true;
+    } else if (isCampingStr === 'false' || isCampingStr === '0' || isCampingStr === '') {
+      // Explicitly false or empty → return non-campers
+      isCampingFilter = false;
+    }
+    // If param exists but has invalid value (not true/false/1/0/empty),
+    // treat as undefined (will default to false/non-campers in service)
+  }
+  // If isCamping param is not present at all, isCampingFilter remains undefined
+  // which will default to false (non-campers) in the service
+  
   const result = await camperService.getAllCampers({
-    page: Number(page),
-    limit: Number(limit),
+    page: page ? Number(page) : undefined,
+    limit: limit ? Number(limit) : undefined,
     status: status as string,
     search: search as string,
+    isCamping: isCampingFilter,
   });
 
   res.status(HTTP_STATUS.OK).json(

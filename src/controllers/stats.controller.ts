@@ -24,6 +24,8 @@ export const getOverview = asyncHandler(async (_req: AuthRequest, res: Response)
     checkedInCampers,
     checkedOutCampers,
     pendingCampers,
+    campingCampers,
+    nonCampingCampers,
     totalRooms,
     occupiedRooms,
     totalCapacity,
@@ -33,6 +35,8 @@ export const getOverview = asyncHandler(async (_req: AuthRequest, res: Response)
     Camper.countDocuments({ isDeleted: false, status: 'checked-in' }),
     Camper.countDocuments({ isDeleted: false, status: 'checked-out' }),
     Camper.countDocuments({ isDeleted: false, status: 'pending' }),
+    Camper.countDocuments({ isDeleted: false, isCamping: true }),
+    Camper.countDocuments({ isDeleted: false, isCamping: false }),
     Room.countDocuments({ isActive: true }),
     Room.countDocuments({ isActive: true, currentOccupancy: { $gt: 0 } }),
     Room.aggregate([{ $match: { isActive: true } }, { $group: { _id: null, total: { $sum: '$capacity' } } }]),
@@ -40,11 +44,16 @@ export const getOverview = asyncHandler(async (_req: AuthRequest, res: Response)
   ]);
 
   const stats = {
-    campers: {
+    totalRegistered: totalCampers,
+    campers: campingCampers,
+    nonCampers: nonCampingCampers,
+    campersDetail: {
       total: totalCampers,
       checkedIn: checkedInCampers,
       checkedOut: checkedOutCampers,
       pending: pendingCampers,
+      camping: campingCampers,
+      nonCamping: nonCampingCampers,
     },
     rooms: {
       total: totalRooms,

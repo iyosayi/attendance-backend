@@ -13,6 +13,7 @@
     "bulk:campers": "ts-node scripts/bulkCreateCampers.ts",
     "import:campers": "ts-node scripts/importCampers.ts",
     "assign:codes": "ts-node scripts/assignCamperCodes.ts",
+    "get-checked-in-by-location": "ts-node scripts/getCheckedInByLocation.ts",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
     "lint": "eslint . --ext .ts",

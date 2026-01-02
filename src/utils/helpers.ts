@@ -26,20 +26,24 @@ export const paginate = (page: number = 1, limit: number = 10) => {
 };
 
 export const generatePaginationMeta = (
-  total: number,
+  totalDocs: number,
   page: number,
   limit: number
 ) => {
-  const totalPages = Math.ceil(total / limit);
+  const totalPages = Math.ceil(totalDocs / limit);
   const hasNextPage = page < totalPages;
   const hasPrevPage = page > 1;
+  const nextPage = hasNextPage ? page + 1 : null;
+  const prevPage = hasPrevPage ? page - 1 : null;
 
   return {
-    total,
+    totalDocs,
+    totalPages,
+    hasPrevPage,
+    hasNextPage,
+    prevPage,
+    nextPage,
     page,
     limit,
-    totalPages,
-    hasNextPage,
-    hasPrevPage,
   };
 };
